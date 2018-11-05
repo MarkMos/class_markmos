@@ -749,6 +749,9 @@ int input_read_parameters(
   class_call(parser_read_double(pfc,"omega_cdm",&param2,&flag2,errmsg),
              errmsg,
              errmsg);
+  class_call(parser_read_double(pfc,"cdm_b_cpl",&param3,&flag3,errmsg), //Markus
+             errmsg,
+             errmsg);
   class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
              errmsg,
              "In input file, you can only enter one of Omega_cdm or omega_cdm, choose one");
@@ -758,6 +761,10 @@ int input_read_parameters(
     pba->Omega0_cdm = param2/pba->h/pba->h;
 
   Omega_tot += pba->Omega0_cdm;
+
+  pba->cdm_b_cpl = param3; //Markus
+
+
 
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),

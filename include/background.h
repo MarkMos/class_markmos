@@ -53,6 +53,8 @@ struct background
 
   double Omega0_cdm; /**< \f$ \Omega_{0 cdm} \f$: cold dark matter */
 
+  double cdm_b_cpl; /**< cdm baryon interaction rate /Markus */
+
   double Omega0_lambda; /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
 
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */

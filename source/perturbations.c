@@ -7219,7 +7219,8 @@ int perturb_derivs(double tau,
       if (ppt->gauge == newtonian) {
         dy[pv->index_pt_delta_cdm] = -(y[pv->index_pt_theta_cdm]+metric_continuity); /* cdm density */
 
-        dy[pv->index_pt_theta_cdm] = - a_prime_over_a*y[pv->index_pt_theta_cdm] + metric_euler; /* cdm velocity */
+        dy[pv->index_pt_theta_cdm] = - a_prime_over_a*y[pv->index_pt_theta_cdm] + metric_euler + pba->cdm_b_cpl*(theta_b-y[pv->index_pt_theta_cdm]); /* cdm velocity */
+        dy[pv->index_pt_theta_b] -= pba->cdm_b_cpl*(theta_b-y[pv->index_pt_theta_cdm]);
       }
 
       /** - ----> synchronous gauge: cdm density only (velocity set to zero by definition of the gauge) */
