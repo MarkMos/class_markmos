@@ -514,8 +514,8 @@ int input_read_parameters(
 
   /** - define local variables */
 
-  int flag1,flag2,flag3;
-  double param1,param2,param3;
+  int flag1,flag2,flag3,flag4;
+  double param1,param2,param3,param4;
   int N_ncdm=0,n,entries_read;
   int int1,fileentries;
   double scf_lambda;
@@ -741,23 +741,59 @@ int input_read_parameters(
   if (flag1 == _TRUE_) ppt->three_cvis2_ur = 3.*param1;
 
   Omega_tot += pba->Omega0_ur;
-
-  /** - Omega_0_cdm (CDM) */
+  /** Beginning of modifications /Markus **/
+  /** - Omega_0_cdm (CDM) and Omega_0_bidm*/
   class_call(parser_read_double(pfc,"Omega_cdm",&param1,&flag1,errmsg),
              errmsg,
              errmsg);
   class_call(parser_read_double(pfc,"omega_cdm",&param2,&flag2,errmsg),
              errmsg,
              errmsg);
+  class_call(parser_read_double(pfc,"f_bidm",&param3,&flag3,errmsg),
+             errmsg,
+             errmsg);
+  class_call(parser_read_double(pfc,"a_bidm",&param4,&flag4,errmsg),
+             errmsg,
+             errmsg);
+
   class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
              errmsg,
              "In input file, you can only enter one of Omega_cdm or omega_cdm, choose one");
-  if (flag1 == _TRUE_)
-    pba->Omega0_cdm = param1;
-  if (flag2 == _TRUE_)
-    pba->Omega0_cdm = param2/pba->h/pba->h;
+  class_test(((flag3 == _TRUE_) && ((flag1 == _FALSE_) && (flag2 == _FALSE_))),
+             errmsg,
+             "In input file, you have to set one of Omega_cdm or omega_cdm, in order to compute the fraction of interacting dark matter");
+  class_test(((flag3 == _TRUE_) && (flag4 == _FALSE_)),
+             errmsg,
+             "In input file, you have f_idm_dr but no a_dark");
+/** Allowing interaction dark matter zero interaction strength, if not desirable, add:
+  class_test(((param3!=0.0) && (param4==0.0)),
+             errmsg,
+             "In input file, you have f_idm_dr!=0. but a_dark=0."); */
 
-  Omega_tot += pba->Omega0_cdm;
+  //this is the standard CDM case
+  if (flag3 == _FALSE_){
+    if (flag1 == _TRUE_)
+      pba->Omega0_cdm = param1;
+    else if (flag2 == _TRUE_)
+      pba->Omega0_cdm = param2/pba->h/pba->h;
+      pba->Omega0_bidm = 0;
+    }
+  //in the presence of interacting dark matter, we take a fraction of CDM
+  else {
+    pth->a_bidm = param4;
+    if (flag1 == _TRUE_){
+      pba->Omega0_bidm = param3*param1;
+      pba->Omega0_cdm = (1.-param3)*param1;
+    }
+    else if (flag2 == _TRUE_){
+      pba->Omega0_bidm = param3*(param2/pba->h/pba->h);
+      pba->Omega0_cdm = (1.-param3)*(param2/pba->h/pba->h);
+    }
+  }
+
+  Omega_tot += pba->Omega0_cdm + pba->Omega0_bidm;
+
+  class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate
 
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),

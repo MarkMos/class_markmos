@@ -185,6 +185,7 @@ int lensing_init(
              ple->error_message,
              ple->error_message);
 
+  
   /** - put all precision variables hare; will be stored later in precision structure */
   /** - Last element in \f$ \mu \f$ will be for \f$ \mu=1 \f$, needed for sigma2.
       The rest will be chosen as roots of a Gauss-Legendre quadrature **/

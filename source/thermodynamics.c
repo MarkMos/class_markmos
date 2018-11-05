@@ -256,6 +256,7 @@ int thermodynamics_init(
                         ) {
 
   /** Summary: */
+  //printf("thermo started\n"); //Markus
 
   /** - define local variables */
 

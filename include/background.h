@@ -82,6 +82,9 @@ struct background
 
   double Gamma_dcdm; /**< \f$ \Gamma_{dcdm} \f$: decay constant for decaying cold dark matter */
 
+  double Omega0_bidm; /** Interacting dark matter /Markus */
+  double C_bidm; /** Interacting dark matter interaction rate /Markus */
+
   double Omega_ini_dcdm;    /**< \f$ \Omega_{ini,dcdm} \f$: rescaled initial value for dcdm density (see 1407.2418 for definitions) */
 
   double Omega0_scf;        /**< \f$ \Omega_{0 scf} \f$: scalar field */
@@ -178,6 +181,7 @@ struct background
   int index_bg_w_fld;         /**< fluid equation of state */
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_dcdm;      /**< dcdm density */
+  int index_bg_rho_bidm;      /**< baryon interacting dark matter density /Markus */
   int index_bg_rho_dr;        /**< dr density */
 
   int index_bg_phi_scf;       /**< scalar field value */
@@ -283,6 +287,7 @@ struct background
   short has_lambda;    /**< presence of cosmological constant? */
   short has_fld;       /**< presence of fluid with constant w and cs2? */
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
+  short has_bidm;      /**< presence of baryon interactiong dark matter Markus */
   short has_curvature; /**< presence of global spatial curvature? */
 
   //@}

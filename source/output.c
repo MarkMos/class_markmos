@@ -667,7 +667,7 @@ int output_pk(
                                    ),
                pop->error_message,
                pop->error_message);
- 
+
     if(pba->has_ncdm){
     class_call(output_open_pk_file(pba,
                                    psp,
@@ -700,7 +700,7 @@ int output_pk(
       class_alloc(pk_ic,
                   psp->ln_k_size*psp->ic_ic_size[index_md]*sizeof(double),
                   pop->error_message);
-      
+
       if (pba->has_ncdm){
       class_alloc(out_cb_ic,
                   psp->ic_ic_size[index_md]*sizeof(FILE *),
@@ -709,7 +709,7 @@ int output_pk(
       class_alloc(pk_cb_ic,
                   psp->ln_k_size*psp->ic_ic_size[index_md]*sizeof(double),
                   pop->error_message);
-      
+
 
       for (index_ic1 = 0; index_ic1 < ppt->ic_size[index_md]; index_ic1++) {
 
@@ -995,9 +995,9 @@ int output_pk_nl(
 
   double * pk_tot; /* array with argument pk_tot[index_k] */
 
-  FILE * out_cb; 
+  FILE * out_cb;
   double * pk_cb_tot;
-  
+
   int index_k;
   int index_z;
 
@@ -1064,7 +1064,7 @@ int output_pk_nl(
       for (index_k=0; index_k<psp->ln_k_size; index_k++) {
 
         pk_tot[index_k] = exp(psp->ln_pk_nl[(psp->ln_tau_nl_size-1) * psp->ln_k_size + index_k]);
-      
+
         if (pba->has_ncdm) pk_cb_tot[index_k] = exp(psp->ln_pk_cb_nl[(psp->ln_tau_nl_size-1) * psp->ln_k_size + index_k]);
 
       }
@@ -1092,7 +1092,7 @@ int output_pk_nl(
                                        pk_tot[index_k]*pow(pba->h,3)),
                  pop->error_message,
                  pop->error_message);
-      
+
       if (pba->has_ncdm){
       class_call(output_one_line_of_pk(out_cb,
                                        exp(psp->ln_k[index_k])/pba->h,

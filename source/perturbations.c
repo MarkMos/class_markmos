@@ -582,6 +582,7 @@ int perturb_indices_of_perturbs(
   ppt->has_source_delta_scf = _FALSE_;
   ppt->has_source_delta_dr = _FALSE_;
   ppt->has_source_delta_ur = _FALSE_;
+  ppt->has_source_delta_bidm = _FALSE_; //Markus
   ppt->has_source_delta_ncdm = _FALSE_;
   ppt->has_source_theta_m = _FALSE_;
   ppt->has_source_theta_cb = _FALSE_;
@@ -593,6 +594,7 @@ int perturb_indices_of_perturbs(
   ppt->has_source_theta_scf = _FALSE_;
   ppt->has_source_theta_dr = _FALSE_;
   ppt->has_source_theta_ur = _FALSE_;
+  ppt->has_source_theta_bidm = _FALSE_; //Markus
   ppt->has_source_theta_ncdm = _FALSE_;
   ppt->has_source_phi = _FALSE_;
   ppt->has_source_phi_prime = _FALSE_;
@@ -678,6 +680,8 @@ int perturb_indices_of_perturbs(
           ppt->has_source_delta_scf = _TRUE_;
         if (pba->has_ur == _TRUE_)
           ppt->has_source_delta_ur = _TRUE_;
+        if (pba->has_bidm == _TRUE_)
+          ppt->has_source_delta_bidm = _TRUE_; //Markus
         if (pba->has_dr == _TRUE_)
           ppt->has_source_delta_dr = _TRUE_;
         if (pba->has_ncdm == _TRUE_)
@@ -704,6 +708,8 @@ int perturb_indices_of_perturbs(
           ppt->has_source_theta_scf = _TRUE_;
         if (pba->has_ur == _TRUE_)
           ppt->has_source_theta_ur = _TRUE_;
+        if (pba->has_bidm ==_TRUE_)
+          ppt->has_source_theta_bidm = _TRUE_; //Markus
         if (pba->has_dr == _TRUE_)
           ppt->has_source_theta_dr = _TRUE_;
         if (pba->has_ncdm == _TRUE_)
@@ -761,6 +767,7 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_delta_scf,  ppt->has_source_delta_scf, index_type,1);
       class_define_index(ppt->index_tp_delta_dr,   ppt->has_source_delta_dr, index_type,1);
       class_define_index(ppt->index_tp_delta_ur,   ppt->has_source_delta_ur,  index_type,1);
+      class_define_index(ppt->index_tp_delta_bidm, ppt->has_source_delta_bidm,index_type,1); //Markus
       class_define_index(ppt->index_tp_delta_ncdm1,ppt->has_source_delta_ncdm,index_type,pba->N_ncdm);
       class_define_index(ppt->index_tp_theta_m,    ppt->has_source_theta_m,   index_type,1);
       class_define_index(ppt->index_tp_theta_cb,   ppt->has_source_theta_cb,  index_type,1);
@@ -771,6 +778,7 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_theta_fld,  ppt->has_source_theta_fld, index_type,1);
       class_define_index(ppt->index_tp_theta_scf,  ppt->has_source_theta_scf, index_type,1);
       class_define_index(ppt->index_tp_theta_dr,   ppt->has_source_theta_dr,  index_type,1);
+      class_define_index(ppt->index_tp_theta_bidm, ppt->has_source_theta_bidm,index_type,1); //Markus
       class_define_index(ppt->index_tp_theta_ur,   ppt->has_source_theta_ur,  index_type,1);
       class_define_index(ppt->index_tp_theta_ncdm1,ppt->has_source_theta_ncdm,index_type,pba->N_ncdm);
       class_define_index(ppt->index_tp_phi,        ppt->has_source_phi,       index_type,1);
@@ -2545,6 +2553,9 @@ int perturb_prepare_output(struct background * pba,
       /* Scalar field scf */
       class_store_columntitle(ppt->scalar_titles, "delta_scf", pba->has_scf);
       class_store_columntitle(ppt->scalar_titles, "theta_scf", pba->has_scf);
+      /* Baryon interacting dark matter */
+      class_store_columntitle(ppt->scalar_titles, "delta_bidm", pba->has_bidm); //Markus
+      class_store_columntitle(ppt->scalar_titles, "theta_bidm", pba->has_bidm); //Markus
 
       ppt->number_of_scalar_titles =
         get_number_of_titles(ppt->scalar_titles);
@@ -3087,6 +3098,11 @@ int perturb_vector_init(
 
     class_define_index(ppv->index_pt_delta_cdm,pba->has_cdm,index_pt,1); /* cdm density */
     class_define_index(ppv->index_pt_theta_cdm,pba->has_cdm && (ppt->gauge == newtonian),index_pt,1); /* cdm velocity */
+
+    /* bidm /Markus */
+
+    class_define_index(ppv->index_pt_delta_bidm,pba->has_bidm,index_pt,1); /*bidm density*/
+    class_define_index(ppv->index_pt_theta_bidm,pba->has_bidm,index_pt,1); /*bidm velocity*/
 
     /* dcdm */
 
@@ -4132,6 +4148,10 @@ int perturb_initial_conditions(struct precision * ppr,
       rho_nu += ppw->pvecback[pba->index_bg_rho_ur];
     }
 
+    if (pba->has_bidm == _TRUE_) {
+      rho_m +=ppw->pvecback[pba->index_bg_rho_bidm]; //Markus
+    }
+
     if (pba->has_ncdm == _TRUE_) {
       for(n_ncdm=0; n_ncdm<pba->N_ncdm; n_ncdm++){
         rho_r += ppw->pvecback[pba->index_bg_rho_ncdm1 + n_ncdm];
@@ -4153,7 +4173,7 @@ int perturb_initial_conditions(struct precision * ppr,
     fracb = ppw->pvecback[pba->index_bg_rho_b]/rho_m;
 
     /* f_cdm = Omega_cdm(t_i) / Omega_m(t_i) */
-    fraccdm = 1.-fracb;
+    fraccdm = 1.-fracb; //Markus: Is this consistent?
 
     /* Omega_m(t_i) / Omega_r(t_i) */
     rho_m_over_rho_r = rho_m/rho_r;
@@ -4215,6 +4235,11 @@ int perturb_initial_conditions(struct precision * ppr,
       if (pba->has_cdm == _TRUE_) {
         ppw->pv->y[ppw->pv->index_pt_delta_cdm] = 3./4.*ppw->pv->y[ppw->pv->index_pt_delta_g]; /* cdm density */
         /* cdm velocity vanishes in the synchronous gauge */
+      }
+
+      if (pba->has_bidm == _TRUE_) {
+        ppw->pv->y[ppw->pv->index_pt_delta_bidm] = 3./4.*ppw->pv->y[ppw->pv->index_pt_delta_g]; /* cdm density /Markus */
+        /* bicdm velocity in the synchronous gauge? /Markus */
       }
 
       if (pba->has_dcdm == _TRUE_) {
@@ -4290,6 +4315,7 @@ int perturb_initial_conditions(struct precision * ppr,
 
     /** - --> (b.2.) Cold dark matter Isocurvature */
 
+    /** Markus: Maybe do something here? bidm is included in fraccdm*/
     if ((ppt->has_cdi == _TRUE_) && (index_ic == ppt->index_ic_cdi)) {
 
       class_test(pba->has_cdm == _FALSE_,
@@ -4332,6 +4358,8 @@ int perturb_initial_conditions(struct precision * ppr,
 
       }
 
+      /*Markus: Add bidm here also?*/
+
       if ((pba->has_ur == _TRUE_) || (pba->has_ncdm == _TRUE_)) {
 
         delta_ur = ppw->pv->y[ppw->pv->index_pt_delta_g];
@@ -4364,6 +4392,8 @@ int perturb_initial_conditions(struct precision * ppr,
 
       }
 
+      /* Markus: Add bidm?*/
+
       delta_ur = ppr->entropy_ini*(1.-ktau_two/6.);
       theta_ur = ppr->entropy_ini*k*k*tau/4.;
       shear_ur = ppr->entropy_ini*ktau_two/(4.*fracnu+15.)/2.;
@@ -4394,6 +4424,8 @@ int perturb_initial_conditions(struct precision * ppr,
         ppw->pv->y[ppw->pv->index_pt_delta_cdm] = -ppr->entropy_ini*9./64.*fracnu*fracb/fracg*k*tau*om*tau;
 
       }
+
+      /*Markus: Add bidm here?*/
 
       delta_ur = -ppr->entropy_ini*k*tau*(1.+3./16.*fracb*fracnu/fracg*om*tau);  /* small diff wrt camb */
       theta_ur = ppr->entropy_ini*3./4.*k*(1. - 1./6.*ktau_two*(4.*fracnu+9.)/(4.*fracnu+5.));
@@ -4432,11 +4464,14 @@ int perturb_initial_conditions(struct precision * ppr,
          = [(4/3) theta_r + (rho_m/rho_r) theta_m] / (1 + rho_m/rho_r)
          = [(4/3) (f_g theta_g + f_nu theta_nu) + (rho_m/rho_r) (f_b delta_b + f_cdm 0)] / (1 + rho_m/rho_r)
       */
-
-      if (pba->has_cdm == _TRUE_)
+      if (pba->has_cdm == _TRUE_ && pba->has_bidm == _TRUE_)
+        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_cdm]+ppw->pv->y[ppw->pv->index_pt_delta_bidm];
+      else if (pba->has_cdm == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_cdm];
       else if (pba->has_dcdm == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dcdm];
+      else if (pba->has_bidm == _TRUE_)
+        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_bidm]; //Markus: consistent?
       else
         delta_cdm=0.;
 
@@ -4459,6 +4494,11 @@ int perturb_initial_conditions(struct precision * ppr,
       if (pba->has_cdm == _TRUE_) {
         ppw->pv->y[ppw->pv->index_pt_delta_cdm] -= 3.*a_prime_over_a*alpha;
         ppw->pv->y[ppw->pv->index_pt_theta_cdm] = k*k*alpha;
+      }
+
+      if (pba->has_bidm == _TRUE_) {
+        ppw->pv->y[ppw->pv->index_pt_delta_bidm] -= 3.*a_prime_over_a*alpha;
+        ppw->pv->y[ppw->pv->index_pt_theta_bidm] = k*k*alpha; //Markus: only this?
       }
 
       if (pba->has_dcdm == _TRUE_) {
@@ -5449,6 +5489,13 @@ int perturb_total_stress_energy(
       rho_plus_p_tot += ppw->pvecback[pba->index_bg_rho_dcdm];
     }
 
+    /* bidm contribution /Markus */
+    if (pba->has_bidm == _TRUE_) {
+      ppw->delta_rho += ppw->pvecback[pba->index_bg_rho_bidm]*y[ppw->pv->index_pt_delta_bidm];
+      ppw->rho_plus_p_theta += ppw->pvecback[pba->index_bg_rho_bidm]*y[ppw->pv->index_pt_theta_bidm];
+      rho_plus_p_tot += ppw->pvecback[pba->index_bg_rho_bidm];
+    }
+
     /* ultra-relativistic decay radiation */
 
     if (pba->has_dr == _TRUE_) {
@@ -5650,6 +5697,13 @@ int perturb_total_stress_energy(
         rho_m += ppw->pvecback[pba->index_bg_rho_dcdm];
       }
 
+      /* include baryon interacting dark matter */
+
+      if (pba->has_bidm == _TRUE_) {
+        delta_rho_m += ppw->pvecback[pba->index_bg_rho_bidm]*y[ppw->pv->index_pt_delta_bidm];
+        rho_m += ppw->pvecback[pba->index_bg_rho_bidm];
+      }
+
       /* infer delta_cb */
       if (ppt->has_source_delta_cb)
        ppw->delta_cb = delta_rho_m/rho_m;
@@ -5688,6 +5742,11 @@ int perturb_total_stress_energy(
         if (ppt->gauge == newtonian)
           rho_plus_p_theta_m += ppw->pvecback[pba->index_bg_rho_cdm]*y[ppw->pv->index_pt_theta_cdm];
         rho_plus_p_m += ppw->pvecback[pba->index_bg_rho_cdm];
+      }
+
+      if (pba->has_bidm == _TRUE_) { //Markus
+        rho_plus_p_theta_m += ppw->pvecback[pba->index_bg_rho_bidm]*y[ppw->pv->index_pt_theta_bidm];
+        rho_plus_p_m += ppw->pvecback[pba->index_bg_rho_bidm];
       }
 
       if (pba->has_dcdm == _TRUE_) {
@@ -6106,7 +6165,7 @@ int perturb_sources(
 
       /* cdm is always on in synchronous gauge, see error message above that checks gauge and has_cdm */
       if (ppt->has_source_h == _TRUE_)
-        _set_source_(ppt->index_tp_h) = - 2 * y[ppw->pv->index_pt_delta_cdm];
+        _set_source_(ppt->index_tp_h) = - 2 * y[ppw->pv->index_pt_delta_cdm]; //Markus: Do anything here?
 
       if (ppt->has_source_h_prime == _TRUE_)
         _set_source_(ppt->index_tp_h_prime) = pvecmetric[ppw->index_mt_h_prime];
@@ -6142,6 +6201,11 @@ int perturb_sources(
     /* delta_cdm */
     if (ppt->has_source_delta_cdm == _TRUE_) {
       _set_source_(ppt->index_tp_delta_cdm) = y[ppw->pv->index_pt_delta_cdm];
+    }
+
+    /* delta bidm /Markus */
+    if (ppt->has_source_delta_bidm == _TRUE_) {
+      _set_source_(ppt->index_tp_delta_bidm) = y[ppw->pv->index_pt_delta_bidm];
     }
 
     /* delta_dcdm */
@@ -6217,6 +6281,11 @@ int perturb_sources(
     /* theta_cdm */
     if (ppt->has_source_theta_cdm == _TRUE_) {
       _set_source_(ppt->index_tp_theta_cdm) = y[ppw->pv->index_pt_theta_cdm];
+    }
+
+    /* theta bidm /Markus */
+    if (ppt->has_source_theta_bidm == _TRUE_) {
+      _set_source_(ppt->index_tp_theta_bidm) = y[ppw->pv->index_pt_theta_bidm];
     }
 
     /* theta_dcdm */
@@ -6351,6 +6420,7 @@ int perturb_print_variables(double tau,
   double delta_b,theta_b;
   double delta_cdm=0.,theta_cdm=0.;
   double delta_dcdm=0.,theta_dcdm=0.;
+  double delta_bidm=0.,theta_bidm=0.;
   double delta_dr=0.,theta_dr=0.,shear_dr=0., f_dr=1.0;
   double delta_ur=0.,theta_ur=0.,shear_ur=0.,l4_ur=0.;
   double delta_rho_scf=0., rho_plus_p_theta_scf=0.;
@@ -6468,6 +6538,11 @@ int perturb_print_variables(double tau,
       else {
         theta_cdm = y[ppw->pv->index_pt_theta_cdm];
       }
+    }
+
+    if (pba->has_bidm == _TRUE_) {
+      delta_bidm = y[ppw->pv->index_pt_delta_bidm];
+      theta_bidm = y[ppw->pv->index_pt_theta_bidm];
     }
 
     /* gravitational potentials */
@@ -6608,6 +6683,11 @@ int perturb_print_variables(double tau,
         theta_cdm += k*k*alpha;
       }
 
+      if (pba->has_bidm == _TRUE_) { //Markus: do something here?
+        delta_bidm -= 3. * pvecback[pba->index_bg_H]*pvecback[pba->index_bg_a]*alpha;
+        theta_bidm += k*k*alpha;
+      }
+
       if (pba->has_ncdm == _TRUE_) {
         for(n_ncdm=0; n_ncdm < pba->N_ncdm; n_ncdm++){
           /** - --> Do gauge transformation of delta, deltaP/rho (?) and theta using -= 3aH(1+w_ncdm) alpha for delta. */
@@ -6678,6 +6758,9 @@ int perturb_print_variables(double tau,
     /* Decaying cold dark matter */
     class_store_double(dataptr, delta_dcdm, pba->has_dcdm, storeidx);
     class_store_double(dataptr, theta_dcdm, pba->has_dcdm, storeidx);
+    /* Baryon interacting dark matter /Markus */
+    class_store_double(dataptr, delta_bidm, pba->has_bidm, storeidx);
+    class_store_double(dataptr, theta_bidm, pba->has_bidm, storeidx);
     /* Decay radiation */
     class_store_double(dataptr, delta_dr, pba->has_dr, storeidx);
     class_store_double(dataptr, theta_dr, pba->has_dr, storeidx);
@@ -7228,6 +7311,13 @@ int perturb_derivs(double tau,
         dy[pv->index_pt_delta_cdm] = -metric_continuity; /* cdm density */
       }
 
+    }
+
+    if (pba->has_bidm == _TRUE_) {
+      dy[pv->index_pt_delta_bidm] = -(y[pv->index_pt_theta_bidm]+metric_continuity); /* bidm density /Markus */
+
+      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler;// + pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+      //dy[pv->index_pt_theta_b] -= pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]);
     }
 
     /* perturbed recombination */

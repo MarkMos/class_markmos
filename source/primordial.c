@@ -219,6 +219,8 @@ int primordial_init(
   k_min = ppt->k_min; /* first value, inferred from perturbations structure */
   k_max = ppt->k_max; /* last value, inferred from perturbations structure */
 
+  printf("k_min = %f k_max = %f\n", k_min, k_max); //Markus
+
   class_test(k_min <= 0.,
              ppm->error_message,
              "k_min negative or null: stop to avoid segmentation fault");

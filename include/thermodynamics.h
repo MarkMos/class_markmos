@@ -151,6 +151,9 @@ struct thermo
   double annihilation_f_halo; /** takes the contribution of DM annihilation in halos into account*/
   double annihilation_z_halo; /** characteristic redshift for DM annihilation in halos*/
 
+
+  /** Parameters for baryon interacting dark matter /Markus */
+  double a_bidm;
   //@}
 
   /** @name - all indices for the vector of thermodynamical (=th) quantities stored in table */
