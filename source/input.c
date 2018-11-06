@@ -2992,6 +2992,9 @@ int input_default_params(
 
   pba->shooting_failed = _FALSE_;
 
+
+  pba->cdm_b_cpl = 0.0; //Markus
+
   /** - thermodynamics structure */
 
   pth->YHe=_BBN_;
