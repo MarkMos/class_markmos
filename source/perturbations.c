@@ -3508,6 +3508,15 @@ int perturb_vector_init(
         }
       }
 
+      //Markus
+      if (pba->has_bidm == _TRUE_) {
+        ppv->y[ppv->index_pt_delta_bidm] =
+          ppw->pv->y[ppw->pv->index_pt_delta_bidm];
+
+        ppv->y[ppv->index_pt_theta_bidm] =
+          ppw->pv->y[ppw->pv->index_pt_theta_bidm];
+      }
+
       if (pba->has_dcdm == _TRUE_) {
 
         ppv->y[ppv->index_pt_delta_dcdm] =
@@ -6541,7 +6550,7 @@ int perturb_print_variables(double tau,
     }
 
     if (pba->has_bidm == _TRUE_) {
-      delta_bidm = y[ppw->pv->index_pt_delta_bidm];
+      delta_bidm = y[ppw->pv->index_pt_delta_bidm]; //Markus
       theta_bidm = y[ppw->pv->index_pt_theta_bidm];
     }
 
@@ -7316,8 +7325,8 @@ int perturb_derivs(double tau,
     if (pba->has_bidm == _TRUE_) {
       dy[pv->index_pt_delta_bidm] = -(y[pv->index_pt_theta_bidm]+metric_continuity); /* bidm density /Markus */
 
-      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler;// + pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
-      //dy[pv->index_pt_theta_b] -= pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]);
+      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler + pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+      dy[pv->index_pt_theta_b] -= pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]);
     }
 
     /* perturbed recombination */

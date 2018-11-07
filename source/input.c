@@ -764,7 +764,7 @@ int input_read_parameters(
              "In input file, you have to set one of Omega_cdm or omega_cdm, in order to compute the fraction of interacting dark matter");
   class_test(((flag3 == _TRUE_) && (flag4 == _FALSE_)),
              errmsg,
-             "In input file, you have f_idm_dr but no a_dark");
+             "In input file, you have f_idm_dr but no a_bidm");
 /** Allowing interaction dark matter zero interaction strength, if not desirable, add:
   class_test(((param3!=0.0) && (param4==0.0)),
              errmsg,
@@ -794,6 +794,7 @@ int input_read_parameters(
   Omega_tot += pba->Omega0_cdm + pba->Omega0_bidm;
 
   class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate
+  class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
 
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),
@@ -2996,6 +2997,9 @@ int input_default_params(
   pba->ncdm_psd_parameters = NULL;
   pba->ncdm_psd_files = NULL;
 
+  pba->Omega0_bidm = 0.0; //Markus
+  pba->C_bidm = 0.0; //Markus
+
   pba->Omega0_scf = 0.; /* Scalar field defaults */
   pba->attractor_ic_scf = _TRUE_;
   pba->scf_parameters = NULL;
@@ -3008,7 +3012,7 @@ int input_default_params(
   pba->Omega0_k = 0.;
   pba->K = 0.;
   pba->sgnK = 0;
-  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr;
+  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr-pba->Omega0_bidm; //Markus, added bidm
   pba->Omega0_fld = 0.;
   pba->a_today = 1.;
   pba->use_ppf = _TRUE_;
@@ -3053,6 +3057,10 @@ int input_default_params(
   pth->compute_cb2_derivatives=_FALSE_;
 
   pth->compute_damping_scale = _FALSE_;
+
+  //Markus
+  pth->a_bidm =0.;
+  pth->m_bidm =1e11;
 
   /** - perturbation structure */
 

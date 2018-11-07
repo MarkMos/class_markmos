@@ -154,6 +154,7 @@ struct thermo
 
   /** Parameters for baryon interacting dark matter /Markus */
   double a_bidm;
+  double m_bidm;
   //@}
 
   /** @name - all indices for the vector of thermodynamical (=th) quantities stored in table */
