@@ -87,7 +87,9 @@ int evolver_rk(int (*derivs)(double x,
 
     if (print_variables != NULL) {
 
-      if (x1 == x_ini) {
+/*     Markus: Removed, fixing bug 
+
+	if (x1 == x_ini) {
 
 	class_call((*derivs)(x1,
 			     y,
@@ -97,7 +99,7 @@ int evolver_rk(int (*derivs)(double x,
 		   error_message,
 		   error_message);
       }
-
+*/
       class_call((*print_variables)(x1,
 				    y,
 				    dy,

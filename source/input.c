@@ -793,8 +793,14 @@ int input_read_parameters(
 
   Omega_tot += pba->Omega0_cdm + pba->Omega0_bidm;
 
-  class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate
-  class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
+  class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate /Markus
+  //class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
+  class_call(parser_read_double(pfc,"m_bidm",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  if (flag1 == _TRUE_) {
+    pth->m_bidm = param1*1.7826619e-30; //converts MeV to kg
+  }
 
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),
@@ -3060,7 +3066,7 @@ int input_default_params(
 
   //Markus
   pth->a_bidm =0.;
-  pth->m_bidm =1e11;
+  pth->m_bidm =1e6*1.7826619e-30; // 1MeV/c^2 in kg
 
   /** - perturbation structure */
 
@@ -3384,7 +3390,7 @@ int input_default_precision ( struct precision * ppr ) {
   ppr->start_large_k_at_tau_h_over_tau_k = 0.07;  /* decrease to start earlier in time */
   ppr->tight_coupling_trigger_tau_c_over_tau_h=0.015; /* decrease to switch off earlier in time */
   ppr->tight_coupling_trigger_tau_c_over_tau_k=0.01; /* decrease to switch off earlier in time */
-  ppr->start_sources_at_tau_c_over_tau_h = 0.008; /* decrease to start earlier in time */
+  ppr->start_sources_at_tau_c_over_tau_h = 0.005; /* decrease to start earlier in time */ //Markus: changed to start earlier
   ppr->tight_coupling_approximation=(int)compromise_CLASS;
 
   ppr->l_max_g=12;

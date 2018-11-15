@@ -155,6 +155,11 @@ int thermodynamics_at_z(
     /* Calculate Tb */
     pvecthermo[pth->index_th_Tb] = pba->T_cmb*(1.+z);
 
+    /* Set Tbidm /Markus */
+    //if (pba->has_bidm == _TRUE_) {
+      pvecthermo[pth->index_th_Tbidm] = 0;
+    //}
+
     /* Calculate cb2 (cb2 = (k_B/mu) Tb (1-1/3 dlnTb/dlna) = (k_B/mu) Tb (1+1/3 (1+z) dlnTb/dz)) */
     /* note that m_H / mu = 1 + (m_H/m_He-1) Y_p + x_e (1-Y_p) */
     pvecthermo[pth->index_th_cb2] = _k_B_ / ( _c_ * _c_ * _m_H_ ) * (1. + (1./_not4_ - 1.) * pth->YHe + x0 * (1.-pth->YHe)) * pba->T_cmb * (1.+z) * 4. / 3.;
@@ -256,7 +261,6 @@ int thermodynamics_init(
                         ) {
 
   /** Summary: */
-  //printf("thermo started\n"); //Markus
 
   /** - define local variables */
 
@@ -286,6 +290,8 @@ int thermodynamics_init(
   double tau;
   double g_max;
   int index_tau_max;
+
+  double dTdz_bidm, Tbidm, T_tmp, dz, z; //Markus
 
   /** - initialize pointers, allocate background vector */
 
@@ -673,6 +679,21 @@ int thermodynamics_init(
                           pth->error_message),
              pth->error_message,
              pth->error_message);
+/*
+  //Markus:
+  if (pba->has_bidm == _TRUE_) {
+    double tau;
+    class_call(background_tau_of_z(pba,pth->z_table[pth->tt_size-1],&(tau)),
+               pba->error_message,
+               pth->error_message);
+    class_call(background_at_tau(pba,tau, pba->short_info, pba->inter_normal, &last_index_back, pvecback),
+               pba->error_message,
+               pth->error_message);
+
+    pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_Tbidm] = pba->T_cmb*(1.+pth->z_table[pth->tt_size-1]); //Fix this?
+
+  }
+*/
 
   /** - fill tables of second derivatives with respect to z (in view of spline interpolation) */
 
@@ -911,6 +932,11 @@ int thermodynamics_indices(
   pth->index_th_cb2 = index;
   index++;
 
+  //if (pba->has_bidm == _TRUE_) {
+    pth->index_th_Tbidm = index;
+    index++;
+  //}
+
   /* derivatives of baryon sound speed (only computed if some non-minimal tight-coupling schemes is requested) */
   if (pth->compute_cb2_derivatives == _TRUE_) {
     pth->index_th_dcb2 = index;
@@ -944,6 +970,11 @@ int thermodynamics_indices(
   preco->index_re_cb2 = index;
   index++;
 
+  //if (pba->has_bidm == _TRUE_) {
+    preco->index_re_Tbidm = index;
+    index++;
+  //}
+
   /* end of indices */
   preco->re_size = index;
 
@@ -964,6 +995,11 @@ int thermodynamics_indices(
   index++;
   preio->index_re_d3kappadz3 = index;
   index++;
+
+  //if (pba->has_bidm == _TRUE_) {
+    preio->index_re_Tbidm = index;
+    index++;
+  //}
 
   /* end of indices */
   preio->re_size = index;
@@ -1294,6 +1330,7 @@ int thermodynamics_helium_from_bbn(
  * @return the error status
  */
 
+//Markus: Apparently cdm-annihilation? Not relevant for bidm
 int thermodynamics_onthespot_energy_injection(
                                               struct precision * ppr,
                                               struct background * pba,
@@ -2291,6 +2328,7 @@ int thermodynamics_reionization_sample(
   double xe,xe_next;
   double dkappadz,dkappadz_next;
   double Tb,Yp,dTdz,opacity,mu;
+  double Tbidm, dTdz_bidm;
   double dkappadtau,dkappadtau_next;
   double energy_rate;
   double tau;
@@ -2361,7 +2399,9 @@ int thermodynamics_reionization_sample(
 
   /** - --> get baryon temperature **/
   Tb = preco->recombination_table[i*preco->re_size+preco->index_re_Tb];
+  Tbidm = preco->recombination_table[i*preco->re_size+preco->index_re_Tbidm]; //Markus: bidm temperature
   reio_vector[preio->index_re_Tb] = Tb;
+  reio_vector[preio->index_re_Tbidm] = Tbidm; //Markus
 
   /** - --> after recombination, Tb scales like (1+z)**2. Compute constant factor Tb/(1+z)**2. */
   //Tba2 = Tb/(1+z)/(1+z);
@@ -2513,12 +2553,24 @@ int thermodynamics_reionization_sample(
       * preio->reionization_table[i*preio->re_size+preio->index_re_xe] * _sigma_ * _Mpc_over_m_;
 
     mu = _m_H_/(1. + (1./_not4_ - 1.) * pth->YHe + preio->reionization_table[i*preio->re_size+preio->index_re_xe] * (1.-pth->YHe));
+    //printf("m_H = %f, not4 = %f, YHe = %f, xe = %f\n", _m_H_, _not4_, pth->YHe, preio->reionization_table[i*preio->re_size+preio->index_re_xe]);
 
-    /** - --> derivative of baryon temperature */
+
+    /** - --> derivative of baryon temperature */ //Markus: Insert Tbidm stuff here
 
     dTdz=2./(1+z)*preio->reionization_table[i*preio->re_size+preio->index_re_Tb]
       -2.*mu/_m_e_*4.*pvecback[pba->index_bg_rho_g]/3./pvecback[pba->index_bg_rho_b]*opacity*
       (pba->T_cmb * (1.+z)-preio->reionization_table[i*preio->re_size+preio->index_re_Tb])/pvecback[pba->index_bg_H];
+
+    if (pba->has_bidm == _TRUE_) { //Markus
+      dTdz += -2.*mu/pth->m_bidm*pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b]*
+              pth->a_bidm/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
+              -preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
+      printf("mu/M_dm = %f\n", mu/pth->m_bidm);
+      dTdz_bidm = 2./(1+z)*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
+                  -2.*pth->a_bidm/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[i*preio->re_size+preio->index_re_Tb]
+                  -preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]);
+    }
 
     if (preco->annihilation > 0) {
 
@@ -2548,6 +2600,13 @@ int thermodynamics_reionization_sample(
 
     preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] =
       preio->reionization_table[i*preio->re_size+preio->index_re_Tb]-dTdz*dz;
+
+    /** - --> Markus: increment bidm temperature */
+    if (pba->has_bidm == _TRUE_) {
+      preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm] =
+        preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]-dTdz_bidm*dz;
+
+    }
 
     /** - --> get baryon sound speed */
 
@@ -2667,7 +2726,7 @@ int thermodynamics_recombination_with_hyrec(
 
   param.T0 = pba->T_cmb;
   param.obh2 = pba->Omega0_b*pba->h*pba->h;
-  param.omh2 = (pba->Omega0_b+pba->Omega0_cdm+pba->Omega0_ncdm_tot)*pba->h*pba->h;
+  param.omh2 = (pba->Omega0_b+pba->Omega0_cdm+pba->Omega0_ncdm_tot+pba->Omega0_bidm)*pba->h*pba->h; //Markus: added bidm
   param.okh2 = pba->Omega0_k*pba->h*pba->h;
   param.odeh2 = (pba->Omega0_lambda+pba->Omega0_fld)*pba->h*pba->h;
   class_call(background_w_fld(pba,pba->a_today,&w_fld,&dw_over_da_fld,&integral_fld), pba->error_message, pth->error_message);
@@ -2876,6 +2935,10 @@ int thermodynamics_recombination_with_hyrec(
 
     /* Tb */
     *(preco->recombination_table+(Nz-i-1)*preco->re_size+preco->index_re_Tb)=Tm;
+
+    /* Tbidm /Markus */
+    *(preco->recombination_table+(Nz-i-1)*preco->re_size+preco->index_re_Tbidm)=0;
+
 
     /* cb2 = (k_B/mu) Tb (1-1/3 dlnTb/dlna) = (k_B/mu) Tb (1+1/3 (1+z) dlnTb/dz)
        with (1+z)dlnTb/dz= - [dlnTb/dlna] */
@@ -3281,6 +3344,10 @@ int thermodynamics_recombination_with_recfast(
     /* Tb */
     *(preco->recombination_table+(Nz-i-1)*preco->re_size+preco->index_re_Tb)=y[2];
 
+    /* Tbidm /Markus */
+    *(preco->recombination_table+(Nz-i-1)*preco->re_size+preco->index_re_Tbidm)=0;
+
+
     /* get dTb/dz=dy[2] */
     class_call(thermodynamics_derivs_with_recfast(zend, y, dy, &tpaw,pth->error_message),
                pth->error_message,
@@ -3649,6 +3716,8 @@ int thermodynamics_merge_reco_and_reio(
       preio->reionization_table[i*preio->re_size+preio->index_re_dkappadtau];
     pth->thermodynamics_table[i*pth->th_size+pth->index_th_Tb]=
       preio->reionization_table[i*preio->re_size+preio->index_re_Tb];
+    pth->thermodynamics_table[i*pth->th_size+pth->index_th_Tbidm]=
+      preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]; //Markus
     pth->thermodynamics_table[i*pth->th_size+pth->index_th_cb2]=
       preio->reionization_table[i*preio->re_size+preio->index_re_cb2];
   }
@@ -3663,6 +3732,8 @@ int thermodynamics_merge_reco_and_reio(
       preco->recombination_table[index_re*preco->re_size+preco->index_re_dkappadtau];
     pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_Tb]=
       preco->recombination_table[index_re*preco->re_size+preco->index_re_Tb];
+    pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_Tbidm]=
+      preco->recombination_table[index_re*preco->re_size+preco->index_re_Tbidm]; //Markus
     pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_cb2]=
       preco->recombination_table[index_re*preco->re_size+preco->index_re_cb2];
   }
@@ -3697,6 +3768,7 @@ int thermodynamics_output_titles(struct background * pba,
   //class_store_columntitle(titles,"g'",_TRUE_);
   //class_store_columntitle(titles,"g''",_TRUE_);
   class_store_columntitle(titles,"Tb [K]",_TRUE_);
+  class_store_columntitle(titles,"Tbidm [K]",pba->has_bidm); //Markus
   class_store_columntitle(titles,"c_b^2",_TRUE_);
   class_store_columntitle(titles,"tau_d",_TRUE_);
   //class_store_columntitle(titles,"max. rate",_TRUE_);
@@ -3745,6 +3817,7 @@ int thermodynamics_output_data(struct background * pba,
     //class_store_double(dataptr,pvecthermo[pth->index_th_dg],_TRUE_,storeidx);
     //class_store_double(dataptr,pvecthermo[pth->index_th_ddg],_TRUE_,storeidx);
     class_store_double(dataptr,pvecthermo[pth->index_th_Tb],_TRUE_,storeidx);
+    class_store_double(dataptr,pvecthermo[pth->index_th_Tbidm],_TRUE_,storeidx); //Markus
     class_store_double(dataptr,pvecthermo[pth->index_th_cb2],_TRUE_,storeidx);
     class_store_double(dataptr,pvecthermo[pth->index_th_tau_d],_TRUE_,storeidx);
     //class_store_double(dataptr,pvecthermo[pth->index_th_rate],_TRUE_,storeidx);

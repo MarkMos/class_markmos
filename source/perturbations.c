@@ -990,6 +990,12 @@ int perturb_timesampling_for_sources(
                pth->error_message,
                ppt->error_message);
 
+    printf("dkappa = %f\n", pvecthermo[pth->index_th_dkappa]);
+    printf("start_source... = %f\n", ppr->start_sources_at_tau_c_over_tau_h);
+    printf("stuff = %f\n", pvecback[pba->index_bg_a]*
+               pvecback[pba->index_bg_H]/
+               pvecthermo[pth->index_th_dkappa]);
+
     class_test(pvecback[pba->index_bg_a]*
                pvecback[pba->index_bg_H]/
                pvecthermo[pth->index_th_dkappa] <
@@ -6451,6 +6457,12 @@ int perturb_print_variables(double tau,
   double a,a2,H;
   int idx,index_q, storeidx;
   double *dataptr;
+  //Markus: Fixing bug in runge-kutta
+  class_call(
+      perturb_derivs(tau, y,dy, parameters_and_workspace, error_message),
+      error_message,
+      error_message
+    );
 
 
   /** - rename structure fields (just to avoid heavy notations) */
