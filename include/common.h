@@ -6,6 +6,7 @@
 #include "string.h"
 #include "float.h"
 #include "svnversion.h"
+#include "gsl/gsl_sf_bessel.h"
 #include <stdarg.h>
 
 #ifdef _OPENMP

@@ -990,11 +990,7 @@ int perturb_timesampling_for_sources(
                pth->error_message,
                ppt->error_message);
 
-    printf("dkappa = %f\n", pvecthermo[pth->index_th_dkappa]);
-    printf("start_source... = %f\n", ppr->start_sources_at_tau_c_over_tau_h);
-    printf("stuff = %f\n", pvecback[pba->index_bg_a]*
-               pvecback[pba->index_bg_H]/
-               pvecthermo[pth->index_th_dkappa]);
+
 
     class_test(pvecback[pba->index_bg_a]*
                pvecback[pba->index_bg_H]/
@@ -7337,8 +7333,10 @@ int perturb_derivs(double tau,
     if (pba->has_bidm == _TRUE_) {
       dy[pv->index_pt_delta_bidm] = -(y[pv->index_pt_theta_bidm]+metric_continuity); /* bidm density /Markus */
 
-      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler + pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
-      dy[pv->index_pt_theta_b] -= pba->C_bidm*(theta_b-y[pv->index_pt_theta_bidm]);
+      //printf("Pertrb: logR = %f\n", log10(pvecthermo[pth->index_th_Rbidm]));
+
+      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler + pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+      dy[pv->index_pt_theta_b] -= ppw->pvecback[pba->index_bg_rho_bidm]/ppw->pvecback[pba->index_bg_rho_b]*pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]);
     }
 
     /* perturbed recombination */

@@ -762,9 +762,9 @@ int input_read_parameters(
   class_test(((flag3 == _TRUE_) && ((flag1 == _FALSE_) && (flag2 == _FALSE_))),
              errmsg,
              "In input file, you have to set one of Omega_cdm or omega_cdm, in order to compute the fraction of interacting dark matter");
-  class_test(((flag3 == _TRUE_) && (flag4 == _FALSE_)),
+  /*class_test(((flag3 == _TRUE_) && (flag4 == _FALSE_)),
              errmsg,
-             "In input file, you have f_idm_dr but no a_bidm");
+             "In input file, you have f_idm_dr but no a_bidm");*/
 /** Allowing interaction dark matter zero interaction strength, if not desirable, add:
   class_test(((param3!=0.0) && (param4==0.0)),
              errmsg,
@@ -793,14 +793,31 @@ int input_read_parameters(
 
   Omega_tot += pba->Omega0_cdm + pba->Omega0_bidm;
 
-  class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate /Markus
-  //class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
+  class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate (deprecated) /Markus
+  //class_read_double("S_bidm",pth->S_bidm); // bidm spin
+  //class_read_double("ci_bidm",pth->ci_bidm);  // bidm isospin coupling coefficient
+  class_read_double("A_bidm",pth->A_bidm); // bidm coupling strength
+  //class_read_double("alpha_bidm",pth->alpha_bidm); // power laww index
+  //class_read_double("beta_bidm",pth->beta_bidm); // power laww index
+
+
+  class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
+  class_read_double("Delta_bidm",pth->Delta_bidm); // bidm resonance mass
+
+  /*
   class_call(parser_read_double(pfc,"m_bidm",&param1,&flag1,errmsg),
              errmsg,
              errmsg);
   if (flag1 == _TRUE_) {
     pth->m_bidm = param1*1.7826619e-30; //converts MeV to kg
   }
+
+  class_call(parser_read_double(pfc,"Delta_bidm",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  if (flag1 == _TRUE_) {// bidm resonance mass /Markus
+    pth->Delta_bidm = param1*1.7826619e-30; //converts MeV to kg
+  }*/
 
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),
@@ -3065,8 +3082,14 @@ int input_default_params(
   pth->compute_damping_scale = _FALSE_;
 
   //Markus
-  pth->a_bidm =0.;
-  pth->m_bidm =1e6*1.7826619e-30; // 1MeV/c^2 in kg
+  pth->a_bidm =0.01;
+  pth->m_bidm =1;  //1e6*1.7826619e-30; // 1MeV/c^2 in kg
+  pth->Delta_bidm =2000; //5e6*1.7826619e-30;
+  //pth->S_bidm = 0.5;
+  //pth->alpha_bidm = 0;
+  //pth->beta_bidm = 0;
+  //pth->ci_bidm = 0;
+  pth->A_bidm = 0;
 
   /** - perturbation structure */
 
@@ -3390,7 +3413,7 @@ int input_default_precision ( struct precision * ppr ) {
   ppr->start_large_k_at_tau_h_over_tau_k = 0.07;  /* decrease to start earlier in time */
   ppr->tight_coupling_trigger_tau_c_over_tau_h=0.015; /* decrease to switch off earlier in time */
   ppr->tight_coupling_trigger_tau_c_over_tau_k=0.01; /* decrease to switch off earlier in time */
-  ppr->start_sources_at_tau_c_over_tau_h = 0.005; /* decrease to start earlier in time */ //Markus: changed to start earlier
+  ppr->start_sources_at_tau_c_over_tau_h = 0.008; /* decrease to start earlier in time */
   ppr->tight_coupling_approximation=(int)compromise_CLASS;
 
   ppr->l_max_g=12;

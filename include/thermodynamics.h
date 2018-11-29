@@ -153,9 +153,23 @@ struct thermo
 
 
   /** Parameters for baryon interacting dark matter /Markus */
-  double a_bidm;
-  double m_bidm;
+  double a_bidm; // coupling strength (deprecated)
+  double m_bidm; // bidm mass
+  double A_bidm; //bidm coupling stregth
+  double Delta_bidm; //resonance mass
+  //double S_bidm; // bidm spin
+  //double alpha_bidm; // power law index
+  //double beta_bidm; // power law index
+  //double ci_bidm; // isosping coupling constant
   //@}
+
+  /** calculated parameters for bidm /Markus */
+  //double R_tilde;
+  //double mu_bidm_B;
+  //double a_B;
+  double m_B;
+
+
 
   /** @name - all indices for the vector of thermodynamical (=th) quantities stored in table */
 
@@ -172,6 +186,7 @@ struct thermo
   int index_th_ddg;           /**< visibility function second derivative \f$ (d^2 g / d \tau^2) \f$ */
   int index_th_Tb;            /**< baryon temperature \f$ T_b \f$ */
   int index_th_Tbidm;         /**< baryon interacting dark mattter temperature */ //Markus
+  int index_th_Rbidm;         /**< bidm coupling */ //Markus
   int index_th_cb2;           /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_th_dcb2;          /**< derivative wrt conformal time of squared baryon sound speed \f$ d [c_b^2] / d \tau \f$ (only computed if some non-minimal tight-coupling schemes is requested) */
   int index_th_ddcb2;         /**< second derivative wrt conformal time of squared baryon sound speed  \f$ d^2 [c_b^2] / d \tau^2 \f$ (only computed if some non0-minimal tight-coupling schemes is requested) */
@@ -277,6 +292,7 @@ struct recombination {
   int index_re_xe;         /**< ionization fraction \f$ x_e \f$ */
   int index_re_Tb;         /**< baryon temperature \f$ T_b \f$ */
   int index_re_Tbidm;      /**< baryon interacting dark mattter temperature */ //Markus
+  int index_re_Rbidm;      /**< bidm coupling */ //Markus
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau \f$ (units 1/Mpc) */
   int re_size;             /**< size of this vector */
@@ -372,6 +388,7 @@ struct reionization {
   int index_re_xe;         /**< ionization fraction \f$ x_e \f$ */
   int index_re_Tb;         /**< baryon temperature \f$ T_b \f$ */
   int index_re_Tbidm;      /**< baryon interacting dark mattter temperature */ //Markus
+  int index_re_Rbidm;      /**< bidm coupling */ //Markus
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau\f$ (units 1/Mpc) */
   int index_re_dkappadz;   /**< Thomson scattering rate with respect to redshift \f$ d \kappa / d z\f$ (units 1/Mpc) */
@@ -621,7 +638,7 @@ extern "C" {
 #define _BBN_ -1
 
 //@}
-
+#define _mykB_ 8.61733e-11 // Boltzmann constant in MeV/K
 /**
  * @name Some basic constants needed by RECFAST:
  */

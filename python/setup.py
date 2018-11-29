@@ -35,10 +35,10 @@ setup(
     url='http://www.class-code.net',
     cmdclass={'build_ext': build_ext},
     ext_modules=[Extension("classy", ["classy.pyx"],
-                           include_dirs=[nm.get_include(), "../include"],
+                           include_dirs=[nm.get_include(), "../include", "/usr/include"],
                            libraries=liblist,
-                           library_dirs=["../", GCCPATH],
-                           extra_link_args=['-lgomp'],
+                           library_dirs=["../", GCCPATH, "/usr/lib/x86_64-linux-gnu"],
+                           extra_link_args=['-lgomp',"-lgsl", "-lgslcblas", "-lm"],
                            )],
     #data_files=[('bbn', ['../bbn/sBBN.dat'])]
 )
