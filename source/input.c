@@ -1252,12 +1252,20 @@ int input_read_parameters(
     class_call(parser_read_double(pfc,"tau_reio",&param2,&flag2,errmsg),
                errmsg,
                errmsg);
+    class_call(parser_read_double(pfc,"z_reiomod_start",&param3,&flag3,errmsg), //Markus
+               errmsg,
+               errmsg);
     class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
                errmsg,
                "In input file, you can only enter one of z_reio or tau_reio, choose one");
+    class_test(((flag1 == _TRUE_) && (flag3 != _TRUE_)),
+               errmsg,
+               "To use z_reio, you must input a z_reiomod_start");
+
     if (flag1 == _TRUE_) {
       pth->z_reio=param1;
       pth->reio_z_or_tau=reio_z;
+      pth->z_reiomod_start=param3;
     }
     if (flag2 == _TRUE_) {
       pth->tau_reio=param2;
@@ -1268,6 +1276,10 @@ int input_read_parameters(
     class_read_double("reionization_width",pth->reionization_width);
     class_read_double("helium_fullreio_redshift",pth->helium_fullreio_redshift);
     class_read_double("helium_fullreio_width",pth->helium_fullreio_width);
+
+    class_test(param1 + 8.*pth->reionization_width > param3, //Markus
+               errmsg,
+               "Reionization module must start before reionization begins");
 
   }
 
@@ -3055,6 +3067,7 @@ int input_default_params(
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;
+  pth->z_reiomod_start=15.357; //Markus
   pth->tau_reio=0.0925;
   pth->reionization_exponent=1.5;
   pth->reionization_width=0.5;

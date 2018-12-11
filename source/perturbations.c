@@ -281,10 +281,14 @@ int perturb_init(
              ppt->error_message,
              ppt->error_message);
 
+  //printf("timesampling for sources done\n");
+
   /** - if we want to store perturbations, write titles and allocate storage */
   class_call(perturb_prepare_output(pba,ppt),
              ppt->error_message,
              ppt->error_message);
+
+  //printf("output prepared\n");
 
 
   /** - create an array of workspaces in multi-thread case */

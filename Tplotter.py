@@ -21,6 +21,8 @@ def myparser():
                         default=[], help='Specify the resonance mass')
     parser.add_argument('-f','--f_bidm', dest='f_bidm', nargs='+', type=float,
                         default=[], help='Specify the interacting dark matter ratio')
+    parser.add_argument('-zr','--z_reiomod_start', dest='z_reiomod_start', nargs='+', type=float,
+                        default=[], help='Specify when reionization module starts')
     parser.add_argument(
         '-p, --print',
         dest='printfile', default='plot.pdf',
@@ -36,8 +38,8 @@ def main():
     cosmo=Class()
     cosmo0=Class()
     title = 'Input:\n'
-    cosmo.set({'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038})
-    cosmo0.set({'a_bidm':0.01,'f_bidm':0.4,'A_bidm':0,'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038})
+    cosmo.set({'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
+    cosmo0.set({'a_bidm':0.01,'f_bidm':0.4,'A_bidm':0,'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
     #print(s)
     if args.A_bidm:
         cosmo.set({'A_bidm':args.A_bidm[0]})
@@ -54,6 +56,14 @@ def main():
     if args.f_bidm:
         cosmo.set({'f_bidm':args.f_bidm[0]})
         title += 'f_bidm = ' + repr(args.f_bidm[0]) + '\n'
+    if args.z_reiomod_start:
+        cosmo.set({'z_reiomod_start':args.z_reiomod_start[0]})
+        cosmo0.set({'z_reiomod_start':args.z_reiomod_start[0]})
+        title += 'z_reiomod_start = ' + repr(args.z_reiomod_start[0]) + '\n'
+    else:
+        cosmo.set({'z_reiomod_start':30})
+        cosmo0.set({'z_reiomod_start':30})
+        title += 'z_reiomod_start = 30\n'
 
     cosmo.compute()
     cosmo0.compute()
@@ -64,10 +74,12 @@ def main():
     Tb0 = thermo0['Tb [K]']
     Tdm = thermo['Tbidm [K]']
     Tdm0 = thermo0['Tbidm [K]']
+    R = thermo['Rbidm']
+    sigma=thermo['sigma_b_dm']
 
-    fig, axes = plt.subplots(nrows=3,ncols=2)
+    fig, axes = plt.subplots(nrows=4,ncols=2)
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
-    fig.set_size_inches(10,12)
+    fig.set_size_inches(10,16)
     fig.suptitle(title)
 
     axes[0,0].semilogy(tau,Tb)
@@ -99,6 +111,17 @@ def main():
     axes[2,1].set_title('DM temperature ratio')
     axes[2,1].set_xlabel('conf. time [Mpc]')
     axes[2,1].set_ylabel('Tdm ratio')
+
+    axes[3,0].semilogy(tau,R)
+    axes[3,0].set_title('coupling strength')
+    axes[3,0].set_xlabel('conf. time [Mpc]')
+    axes[3,0].set_ylabel('R')
+
+    axes[3,1].semilogy(tau,sigma)
+    axes[3,1].set_title('Cross section')
+    axes[3,1].set_xlabel('conf. time [Mpc]')
+    axes[3,1].set_ylabel('sigma')
+
 
     fig.savefig(args.printfile)
 
