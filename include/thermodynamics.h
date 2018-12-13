@@ -40,6 +40,14 @@ enum reionization_z_or_tau {
 };
 
 /**
+ * Is the bidm interaction a resonance or power law?
+ */
+enum bidm_interaction_type {
+  resonance, //  /Markus
+  powerlaw
+};
+
+/**
  * Two useful smooth step functions, for smoothing transitions in recfast.
  */
 
@@ -70,6 +78,8 @@ struct thermo
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
   enum reionization_z_or_tau reio_z_or_tau; /**< is the input parameter the reionization redshift or optical depth? */
+
+  enum bidm_interaction_type bidm_type; // bidm interaction type /Markus
 
   double tau_reio; /**< if above set to tau, input value of reionization optical depth */
 
@@ -159,6 +169,8 @@ struct thermo
   double m_bidm; // bidm mass
   double A_bidm; //bidm coupling stregth
   double Delta_bidm; //resonance mass
+  double epsilon_bidm; //resonance energy difference
+  double n_bidm; //power law bidm index
   //double S_bidm; // bidm spin
   //double alpha_bidm; // power law index
   //double beta_bidm; // power law index

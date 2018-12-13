@@ -2373,13 +2373,15 @@ int thermodynamics_reionization_sample(
   double xe,xe_next;
   double dkappadz,dkappadz_next;
   double Tb,Yp,dTdz,opacity,mu;
-  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, x_bidm, x_b, Q, input, mymu; //Markus
+  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, x_bidm, x_b, input, mymu, vrel; //Markus
   double dkappadtau,dkappadtau_next;
   double energy_rate;
   double tau;
   double chi_heat;
   int last_index_back;
   double relative_variation;
+
+  double Q = pth->epsilon_bidm*(2*pth->m_B+2*pth->m_bidm+pth->epsilon_bidm)/2/pth->m_bidm/pth->m_B; //Markus
 
   Yp = pth->YHe;
 
@@ -2612,23 +2614,37 @@ int thermodynamics_reionization_sample(
 
       //printf("before bidm\n");
     if (pba->has_bidm == _TRUE_) { //Markus
+      //printf("Tb = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
+      if (pth->bidm_type == resonance) {
+        x_bidm = pth->m_bidm/(_mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]);
+        x_b = pth->m_B/(_mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
+        //Q = (pow(pth->Delta_bidm,2)-pow(pth->m_bidm+pth->m_B,2))/2/pth->m_bidm/pth->m_B;
+        input = Q/2*pow(x_bidm*x_b,0.5);
 
-      x_bidm = pth->m_bidm/(_mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]);
-      x_b = pth->m_B/(_mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
-      Q = (pow(pth->Delta_bidm,2)-pow(pth->m_bidm+pth->m_B,2))/2/pth->m_bidm/pth->m_B;
-      input = Q/2*pow(x_bidm*x_b,0.5);
+        //printf("x_bidm = %f, logT_bidm = %f, x_b= %f, logQ = %f, loginput = %f\n", x_bidm,log10(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]) , x_b, log10(Q), log10(input));
+        //printf("Tb = %f, input = %f\n", (preio->reionization_table[i*preio->re_size+preio->index_re_Tb]),input);
+        if (input < 700.0) {
+          sigmav = pth->A_bidm*x_bidm*x_b*pow(Q,1.5)/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(input);
+        }
+        else {
+          sigmav = 0;
+        }
+      } else {
+        //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
+        vrel = pow(3*(pth->m_bidm*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
+                     +pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb])
+                     /pth->m_B/pth->m_bidm,0.5);
+        sigmav = pth->A_bidm*pow(vrel,-1*pth->n_bidm);
 
-      //printf("x_bidm = %f, logT_bidm = %f, x_b= %f, logQ = %f, loginput = %f\n", x_bidm,log10(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]) , x_b, log10(Q), log10(input));
-      //printf("Tb = %f, input = %f\n", (preio->reionization_table[i*preio->re_size+preio->index_re_Tb]),input);
-      if (input < 700.0) {
-        sigmav = pth->A_bidm*x_bidm*x_b*pow(Q,1.5)/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(input);
+        //printf("logvrel = %f, logsigma = %f\n", log10(vrel), log10(sigmav) );
+        class_test((sigmav < 0),
+                   pth->error_message,
+                   "sigma < 0");
       }
-      else {
-        sigmav = 0;
-      }
+
 
       //printf("all log x_b =%f, x_dm =%f, Q=%f, input=%f, sigma=%f, z=%f \n",log10(x_b), log10(x_bidm), log10(Q), log10(input), log10(sigmav), z);
-
+      //printf("vrel = %f, sigmav = %f, z = %f\n",vrel, sigmav, z);
 
       Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
 
@@ -2701,21 +2717,33 @@ int thermodynamics_reionization_sample(
   + preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]/pth->m_bidm),
   -(2.+pth->beta_bidm));*/
   if (pba->has_bidm == _TRUE_){
-    x_bidm = pth->m_bidm/(preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]);
-    x_b = pth->m_B/(preio->reionization_table[0*preio->re_size+preio->index_re_Tb]);
-    Q = (pow(pth->Delta_bidm,2)-pow(pth->m_bidm+pth->m_B,2))/2/pth->m_bidm/pth->m_B;
+    if (pth->bidm_type == resonance) {
+      x_bidm = pth->m_bidm/(preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]);
+      x_b = pth->m_B/(preio->reionization_table[0*preio->re_size+preio->index_re_Tb]);
 
 
-    if (Q/2*pow(x_bidm*x_b,0.5)<700) {
-      sigmav = pth->A_bidm*x_bidm*x_b*pow(Q,1.5)/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(Q/2*pow(x_bidm*x_b,0.5));
+      if (Q/2*pow(x_bidm*x_b,0.5)<700) {
+        sigmav = pth->A_bidm*x_bidm*x_b*pow(Q,1.5)/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(Q/2*pow(x_bidm*x_b,0.5));
+      } else {
+        sigmav = 0;
+      }
+
+
+      Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
+      preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
+      preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
     } else {
-      sigmav = 0;
+      vrel = pow(3*(pth->m_bidm*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
+                   +pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb])
+                   /pth->m_B/pth->m_bidm,0.5);
+      sigmav = pth->A_bidm*pow(vrel,-1*pth->n_bidm);
+      Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
+      preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
+      preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
+      //printf("sigma = %f, R = %f\n", sigmav, Rbidm);
     }
 
 
-    Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
-    preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
-    preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
   }
 
   /** - --> spline \f$ d \tau / dz \f$ with respect to z in view of integrating for optical depth */

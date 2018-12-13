@@ -19,10 +19,17 @@ def myparser():
                         default=[], help='Specify the dark matter mass')
     parser.add_argument('-D','--Delta_bidm', dest='Delta_bidm', nargs='+', type=float,
                         default=[], help='Specify the resonance mass')
+    parser.add_argument('-e','--epsilon', dest='epsilon', nargs='+', type=float,
+                        default=[], help='Specify resonance energy difference')
     parser.add_argument('-f','--f_bidm', dest='f_bidm', nargs='+', type=float,
                         default=[], help='Specify the interacting dark matter ratio')
     parser.add_argument('-zr','--z_reiomod_start', dest='z_reiomod_start', nargs='+', type=float,
                         default=[], help='Specify when reionization module starts')
+    parser.add_argument('-n','--n_bidm', dest='n_bidm', nargs='+', type=float,
+                        default=[], help='Specify the dark matter power law index')
+    parser.add_argument('-t','--bidm_type', type=str, dest='bidm_type', default='resonance',
+                        choices=['resonance','powerlaw'],
+                        help='Specify the type of bidm')
     parser.add_argument(
         '-p, --print',
         dest='printfile', default='plot.pdf',
@@ -53,9 +60,18 @@ def main():
     if args.Delta_bidm:
         cosmo.set({'Delta_bidm':args.Delta_bidm[0]})
         title += 'Delta_bidm = ' + repr(args.Delta_bidm[0]) + '\n'
+    if args.epsilon:
+        cosmo.set({'epsilon_bidm':args.epsilon[0]})
+        title += 'epsilon = ' + repr(args.epsilon[0]) + '\n'
     if args.f_bidm:
         cosmo.set({'f_bidm':args.f_bidm[0]})
         title += 'f_bidm = ' + repr(args.f_bidm[0]) + '\n'
+    if args.bidm_type:
+        cosmo.set({'bidm_type':args.bidm_type})
+        title += 'bidm_type = ' + repr(args.bidm_type) + '\n'
+    if args.n_bidm:
+        cosmo.set({'n_bidm':args.n_bidm[0]})
+        title += 'n_bidm = ' + repr(args.n_bidm[0]) + '\n'
     if args.z_reiomod_start:
         cosmo.set({'z_reiomod_start':args.z_reiomod_start[0]})
         cosmo0.set({'z_reiomod_start':args.z_reiomod_start[0]})

@@ -802,7 +802,48 @@ int input_read_parameters(
 
 
   class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus
-  class_read_double("Delta_bidm",pth->Delta_bidm); // bidm resonance mass
+  class_read_double("n_bidm",pth->n_bidm); // power law index /Markus
+  //class_read_double("Delta_bidm",pth->Delta_bidm); // bidm resonance mass
+
+  class_call(parser_read_double(pfc,"Delta_bidm",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  class_call(parser_read_double(pfc,"epsilon_bidm",&param2,&flag2,errmsg),
+             errmsg,
+             errmsg);
+
+  class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+             errmsg,
+             "In input file, you can only enter one of Delta_bidm or epsilon_bidm, choose one");
+  if (flag1 == _TRUE_) {
+    pth->Delta_bidm = param1;
+    pth->epsilon_bidm = param1-pth->m_bidm-1000;
+
+  } else if (flag2==_TRUE_) {
+    pth->epsilon_bidm = param2;
+    pth->Delta_bidm = param2+pth->m_bidm+1000; //CHECK LATER /Markus
+  }
+
+  /** - reionization parametrization */
+  class_call(parser_read_string(pfc,"bidm_type",&string1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+
+  if (flag1 == _TRUE_) {
+    flag2=_FALSE_;
+    if (strcmp(string1,"resonance") == 0) {
+      pth->bidm_type=resonance;
+      flag2=_TRUE_;
+    }
+    if (strcmp(string1,"powerlaw") == 0) {
+      pth->bidm_type=powerlaw;
+      flag2=_TRUE_;
+    }
+
+    class_test(flag2==_FALSE_,
+               errmsg,
+               "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw'...");
+  }
 
   /*
   class_call(parser_read_double(pfc,"m_bidm",&param1,&flag1,errmsg),
@@ -3096,8 +3137,11 @@ int input_default_params(
 
   //Markus
   pth->a_bidm =0.01;
-  pth->m_bidm =1;  //1e6*1.7826619e-30; // 1MeV/c^2 in kg
-  pth->Delta_bidm =2000; //5e6*1.7826619e-30;
+  pth->m_bidm =1000;  //1e6*1.7826619e-30; // 1MeV/c^2 in kg
+  pth->Delta_bidm =2000+3e-11; //5e6*1.7826619e-30;
+  pth->epsilon_bidm = 3e-11;
+  pth->n_bidm = 4;
+  pth->bidm_type = resonance;
   //pth->S_bidm = 0.5;
   //pth->alpha_bidm = 0;
   //pth->beta_bidm = 0;
