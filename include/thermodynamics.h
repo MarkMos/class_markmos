@@ -44,7 +44,8 @@ enum reionization_z_or_tau {
  */
 enum bidm_interaction_type {
   resonance, //  /Markus
-  powerlaw
+  powerlaw,
+  newpowerlaw
 };
 
 /**
@@ -655,7 +656,8 @@ extern "C" {
 #define _BBN_ -1
 
 //@}
-#define _mykB_ 8.61733e-11 // Boltzmann constant in MeV/K
+#define _mykB_ 8.61733e-11 // Boltzmann constant in MeV/K /Markus
+#define _C_phys_ 91709.7 // Conversion factor for rho to MeV/cm^3 /Markus
 /**
  * @name Some basic constants needed by RECFAST:
  */

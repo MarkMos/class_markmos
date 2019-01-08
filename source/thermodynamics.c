@@ -2373,7 +2373,7 @@ int thermodynamics_reionization_sample(
   double xe,xe_next;
   double dkappadz,dkappadz_next;
   double Tb,Yp,dTdz,opacity,mu;
-  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, x_bidm, x_b, input, mymu, vrel; //Markus
+  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, x_bidm, x_b, input, mymu, vrel, vrmssq, cn; //Markus
   double dkappadtau,dkappadtau_next;
   double energy_rate;
   double tau;
@@ -2629,27 +2629,41 @@ int thermodynamics_reionization_sample(
         else {
           sigmav = 0;
         }
-      } else {
+      } else if (pth->bidm_type == powerlaw) {
         //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
-        vrel = pow(3*(pth->m_bidm*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
-                     +pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb])
+        vrel = pow(3*(pth->m_B*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]*_mykB_
+                     +pth->m_bidm   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]*_mykB_)
                      /pth->m_B/pth->m_bidm,0.5);
-        sigmav = pth->A_bidm*pow(vrel,-1*pth->n_bidm);
+        sigmav = pth->A_bidm*pow(vrel,pth->n_bidm);
 
         //printf("logvrel = %f, logsigma = %f\n", log10(vrel), log10(sigmav) );
         class_test((sigmav < 0),
                    pth->error_message,
                    "sigma < 0");
+
+
+      } else if (pth->bidm_type == newpowerlaw) {
+        //Be careful with R and R' definitions!
+        cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
+        //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
+        vrmssq = pow((1.+z)/1e3,2)*1e-8;
+        vrel =  (preio->reionization_table[i*preio->re_size+preio->index_re_Tb]*_mykB_/pth->m_B
+               +preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]*_mykB_/pth->m_bidm
+               +vrmssq/3.0);
+        sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+
       }
 
+      Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
+
+
+      R_prime = pth->m_bidm/(pth->m_bidm+pth->m_B) * Rbidm;
+      //printf("logvrel = %f, logsigmav = %f, logR = %f, cn = %f, Yhe = %f\n", log10(vrel), log10(sigmav), log10(Rbidm), cn, pth->YHe);
 
       //printf("all log x_b =%f, x_dm =%f, Q=%f, input=%f, sigma=%f, z=%f \n",log10(x_b), log10(x_bidm), log10(Q), log10(input), log10(sigmav), z);
       //printf("vrel = %f, sigmav = %f, z = %f\n",vrel, sigmav, z);
 
-      Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
 
-
-      R_prime = pth->m_bidm/(pth->m_bidm+pth->m_B) * Rbidm;
 
       dTdz += -2.*mymu/pth->m_bidm*pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b]*
               R_prime/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
@@ -2690,10 +2704,31 @@ int thermodynamics_reionization_sample(
     preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] =
       preio->reionization_table[i*preio->re_size+preio->index_re_Tb]-dTdz*dz;
 
+    /*
+      if (preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] < 0) {
+        printf("Tb_old = %f, change = %f Tbdim_old = %f, change = %f\n",
+              preio->reionization_table[i*preio->re_size+preio->index_re_Tb],
+              dTdz*dz,
+              preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],
+              dTdz_bidm*dz);
+      }
+
+    class_test((preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb]<0.)
+                ,pth->error_message,
+                "Error Tb < 0");*/
+
     /** - --> Markus: increment bidm temperature */
     if (pba->has_bidm == _TRUE_) {
       preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm] =
         preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]-dTdz_bidm*dz;
+
+        class_test((preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm]<0.)
+                    ,pth->error_message,
+                    "Error Tbidm < 0");
+
+        if (preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] < 0) {
+            preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] = preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm];
+                        }
 
         preio->reionization_table[i*preio->re_size+preio->index_re_Rbidm]=Rbidm;
         preio->reionization_table[i*preio->re_size+preio->index_re_sigma]=sigmav;
@@ -2728,21 +2763,26 @@ int thermodynamics_reionization_sample(
         sigmav = 0;
       }
 
-
-      Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
-      preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
-      preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
-    } else {
+    } else if (pth->bidm_type == powerlaw) {
       vrel = pow(3*(pth->m_bidm*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
                    +pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb])
                    /pth->m_B/pth->m_bidm,0.5);
       sigmav = pth->A_bidm*pow(vrel,-1*pth->n_bidm);
-      Rbidm = pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
-      preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
-      preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
+
       //printf("sigma = %f, R = %f\n", sigmav, Rbidm);
     }
+    else if (pth->bidm_type == newpowerlaw) {
+      cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
+      vrmssq = pow((1.+z)/1e3,2)*1e-8;
+      vrel =  preio->reionization_table[0*preio->re_size+preio->index_re_Tb]*_mykB_/pth->m_B
+             +preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]*_mykB_/pth->m_bidm
+             +vrmssq/3.0;
+      sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
+    }
+    Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
+    preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
+    preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
 
   }
 

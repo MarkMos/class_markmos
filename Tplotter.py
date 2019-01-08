@@ -28,7 +28,7 @@ def myparser():
     parser.add_argument('-n','--n_bidm', dest='n_bidm', nargs='+', type=float,
                         default=[], help='Specify the dark matter power law index')
     parser.add_argument('-t','--bidm_type', type=str, dest='bidm_type', default='resonance',
-                        choices=['resonance','powerlaw'],
+                        choices=['resonance','powerlaw','newpowerlaw'],
                         help='Specify the type of bidm')
     parser.add_argument(
         '-p, --print',
@@ -46,13 +46,14 @@ def main():
     cosmo0=Class()
     title = 'Input:\n'
     cosmo.set({'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
-    cosmo0.set({'a_bidm':0.01,'f_bidm':0.4,'A_bidm':0,'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
+    cosmo0.set({'f_bidm':0.4,'A_bidm':0,'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
     #print(s)
     if args.A_bidm:
         cosmo.set({'A_bidm':args.A_bidm[0]})
         title += 'A_bidm = ' + repr(args.A_bidm[0]) + '\n'
     if args.a_bidm:
         cosmo.set({'a_bidm':args.a_bidm[0]})
+        cosmo0.set({'a_bidm':args.a_bidm[0]})
         title += 'a_bidm = ' + repr(args.a_bidm[0]) + '\n'
     if args.M_bidm:
         cosmo.set({'m_bidm':args.M_bidm[0]})

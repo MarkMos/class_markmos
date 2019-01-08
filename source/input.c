@@ -796,7 +796,7 @@ int input_read_parameters(
   class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate (deprecated) /Markus
   //class_read_double("S_bidm",pth->S_bidm); // bidm spin
   //class_read_double("ci_bidm",pth->ci_bidm);  // bidm isospin coupling coefficient
-  class_read_double("A_bidm",pth->A_bidm); // bidm coupling strength
+  class_read_double("A_bidm",pth->A_bidm); // bidm coupling strength (cross section in cm^2)
   //class_read_double("alpha_bidm",pth->alpha_bidm); // power laww index
   //class_read_double("beta_bidm",pth->beta_bidm); // power laww index
 
@@ -839,10 +839,14 @@ int input_read_parameters(
       pth->bidm_type=powerlaw;
       flag2=_TRUE_;
     }
+    if (strcmp(string1,"newpowerlaw") == 0) {
+      pth->bidm_type=newpowerlaw;
+      flag2=_TRUE_;
+    }
 
     class_test(flag2==_FALSE_,
                errmsg,
-               "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw'...");
+               "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw', 'newpowerlaw'...");
   }
 
   /*
