@@ -30,13 +30,31 @@ def myparser():
     parser.add_argument('-t','--bidm_type', type=str, dest='bidm_type', default='resonance',
                         choices=['resonance','powerlaw','newpowerlaw'],
                         help='Specify the type of bidm')
+    parser.add_argument('-rec','--recombination', type=str, dest='recombination', default='recfast',
+                        choices=['recfast','hyrec'],
+                        help='Specify the recombination algorithm')
+    parser.add_argument('-x','--x_axis', type=str, dest='x_axis', default='tau',
+                        choices=['tau','z'],
+                        help='Specify the first axis')
     parser.add_argument(
         '-p, --print',
         dest='printfile', default='plot.pdf',
         help=('print the graph directly in a file.'))
     return parser
 
+def myplot(ax,x,y,xtype):
+    if xtype == 'tau':
+        ax.plot(x,y)
 
+    if xtype =='z':
+        ax.semilogx(x,y)
+
+def mylogy(ax,x,y,xtype):
+    if xtype == 'tau':
+        ax.semilogy(x,y)
+
+    if xtype =='z':
+        ax.loglog(x,y)
 
 def main():
     parser=myparser()
@@ -55,6 +73,10 @@ def main():
         cosmo.set({'a_bidm':args.a_bidm[0]})
         cosmo0.set({'a_bidm':args.a_bidm[0]})
         title += 'a_bidm = ' + repr(args.a_bidm[0]) + '\n'
+    if args.recombination:
+        cosmo.set({'recombination':args.recombination})
+        cosmo0.set({'recombination':args.recombination})
+        title += 'recombination = ' + repr(args.recombination) + '\n'
     if args.M_bidm:
         cosmo.set({'m_bidm':args.M_bidm[0]})
         title += 'm_bidm = ' + repr(args.M_bidm[0]) + '\n'
@@ -87,6 +109,7 @@ def main():
     thermo = cosmo.get_thermodynamics()
     thermo0 = cosmo0.get_thermodynamics()
     tau = thermo['conf. time [Mpc]']
+    z = thermo['z']
     Tb = thermo['Tb [K]']
     Tb0 = thermo0['Tb [K]']
     Tdm = thermo['Tbidm [K]']
@@ -94,49 +117,65 @@ def main():
     R = thermo['Rbidm']
     sigma=thermo['sigma_b_dm']
 
+    if args.x_axis == 'tau':
+        xaxis = tau
+        xlabel = 'conf. time [Mpc]'
+
+    if args.x_axis == 'z':
+        xaxis = z
+        xlabel = 'z'
+
     fig, axes = plt.subplots(nrows=4,ncols=2)
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
-    fig.set_size_inches(10,16)
+    fig.set_size_inches(10,18)
     fig.suptitle(title)
 
-    axes[0,0].semilogy(tau,Tb)
+    #axes[0,0].semilogy(xaxis,Tb)
+    mylogy(axes[0,0],xaxis,Tb,args.x_axis)
     axes[0,0].set_title('Baryon temperature')
-    axes[0,0].set_xlabel('conf. time [Mpc]')
+    axes[0,0].set_xlabel(xlabel)
     axes[0,0].set_ylabel('Tb [K]')
 
-    axes[0,1].semilogy(tau,Tdm)
+    #axes[0,1].semilogy(xaxis,Tdm)
+    mylogy(axes[0,1],xaxis,Tdm,args.x_axis)
     axes[0,1].set_title('DM temperature')
-    axes[0,1].set_xlabel('conf. time [Mpc]')
+    axes[0,1].set_xlabel(xlabel)
     axes[0,1].set_ylabel('Tdm [K]')
 
-    axes[1,0].plot(tau,Tb-Tb0)
+    #axes[1,0].plot(xaxis,Tb-Tb0)
+    myplot(axes[1,0],xaxis,Tb-Tb0,args.x_axis)
     axes[1,0].set_title('Baryon temperature difference')
-    axes[1,0].set_xlabel('conf. time [Mpc]')
+    axes[1,0].set_xlabel(xlabel)
     axes[1,0].set_ylabel('$\Delta$Tb [K]')
 
-    axes[1,1].plot(tau,Tdm-Tdm0)
+    #axes[1,1].plot(xaxis,Tdm-Tdm0)
+    myplot(axes[1,1],xaxis,Tdm-Tdm0,args.x_axis)
     axes[1,1].set_title('DM temperature difference')
-    axes[1,1].set_xlabel('conf. time [Mpc]')
+    axes[1,1].set_xlabel(xlabel)
     axes[1,1].set_ylabel('$\Delta$Tdm [K]')
 
-    axes[2,0].plot(tau,Tb/Tb0)
+    #axes[2,0].plot(xaxis,Tb/Tb0)
+    myplot(axes[2,0],xaxis,Tb/Tb0,args.x_axis)
     axes[2,0].set_title('Baryon temperature ratio')
-    axes[2,0].set_xlabel('conf. time [Mpc]')
+    axes[2,0].set_xlabel(xlabel)
     axes[2,0].set_ylabel('Tb ratio')
 
-    axes[2,1].plot(tau,Tdm/Tdm0)
+    #axes[2,1].plot(xaxis,Tdm/Tdm0)
+    myplot(axes[2,1],xaxis,Tdm/Tdm0,args.x_axis)
     axes[2,1].set_title('DM temperature ratio')
-    axes[2,1].set_xlabel('conf. time [Mpc]')
+    axes[2,1].set_xlabel(xlabel)
     axes[2,1].set_ylabel('Tdm ratio')
 
-    axes[3,0].semilogy(tau,R)
-    axes[3,0].set_title('coupling strength')
-    axes[3,0].set_xlabel('conf. time [Mpc]')
+    #axes[3,0].semilogy(xaxis,R)
+    mylogy(axes[3,0],xaxis,R,args.x_axis)
+    axes[3,0].set_title('Interaction Rate')
+    axes[3,0].set_xlabel(xlabel)
     axes[3,0].set_ylabel('R')
 
-    axes[3,1].semilogy(tau,sigma)
+    #axes[3,1].semilogy(xaxis,sigma)
+    mylogy(axes[3,1],xaxis,sigma,args.x_axis)
     axes[3,1].set_title('Cross section')
-    axes[3,1].set_xlabel('conf. time [Mpc]')
+    axes[3,1].set_xlabel(xlabel)
     axes[3,1].set_ylabel('sigma')
 
 

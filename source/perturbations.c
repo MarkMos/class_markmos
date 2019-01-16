@@ -7338,8 +7338,8 @@ int perturb_derivs(double tau,
       dy[pv->index_pt_delta_bidm] = -(y[pv->index_pt_theta_bidm]+metric_continuity); /* bidm density /Markus */
 
       //printf("logR = %f, R = %f, sigma = %f, Tdm = %f, Tb = %f\n", log10(pvecthermo[pth->index_th_Rbidm]),pvecthermo[pth->index_th_Rbidm],pvecthermo[pth->index_th_sigma],pvecthermo[pth->index_th_Tbidm],pvecthermo[pth->index_th_Tb]);
-
-      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + metric_euler + pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+      //printf("cbidm2 = %f, Rbidm = %f\n", pvecthermo[pth->index_th_cbidm2], pvecthermo[pth->index_th_Rbidm]);
+      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + pvecthermo[pth->index_th_cbidm2]*k*k*y[pv->index_pt_delta_bidm]  + metric_euler + pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
       dy[pv->index_pt_theta_b] -= ppw->pvecback[pba->index_bg_rho_bidm]/ppw->pvecback[pba->index_bg_rho_b]*pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]);
     }
 

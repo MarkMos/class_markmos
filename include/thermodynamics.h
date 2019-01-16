@@ -203,6 +203,7 @@ struct thermo
   int index_th_Tbidm;         /**< baryon interacting dark mattter temperature */ //Markus
   int index_th_Rbidm;         /**< bidm coupling */ //Markus
   int index_th_sigma;         /**< bidm cross section */ //Markus
+  int index_th_cbidm2;        /**< bidm sound speed */ //Markus
   int index_th_cb2;           /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_th_dcb2;          /**< derivative wrt conformal time of squared baryon sound speed \f$ d [c_b^2] / d \tau \f$ (only computed if some non-minimal tight-coupling schemes is requested) */
   int index_th_ddcb2;         /**< second derivative wrt conformal time of squared baryon sound speed  \f$ d^2 [c_b^2] / d \tau^2 \f$ (only computed if some non0-minimal tight-coupling schemes is requested) */
@@ -310,6 +311,7 @@ struct recombination {
   int index_re_Tbidm;      /**< baryon interacting dark mattter temperature */ //Markus
   int index_re_Rbidm;      /**< bidm coupling */ //Markus
   int index_re_sigma;         /**< bidm cross section */ //Markus
+  int index_re_cbidm2;        /**< bidm sound speed */ //Markus
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau \f$ (units 1/Mpc) */
   int re_size;             /**< size of this vector */
@@ -407,6 +409,7 @@ struct reionization {
   int index_re_Tbidm;      /**< baryon interacting dark mattter temperature */ //Markus
   int index_re_Rbidm;      /**< bidm coupling */ //Markus
   int index_re_sigma;         /**< bidm cross section */ //Markus
+  int index_re_cbidm2;        /**< bidm sound speed */ //Markus
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau\f$ (units 1/Mpc) */
   int index_re_dkappadz;   /**< Thomson scattering rate with respect to redshift \f$ d \kappa / d z\f$ (units 1/Mpc) */
