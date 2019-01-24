@@ -179,7 +179,7 @@ int thermodynamics_at_z(
         else {
           sigmav = 0;
         }
-      } else if (pth->bidm_type == powerlaw) {
+      } else if (pth->bidm_type == powerlawapprox) {
         //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
         vrel = pow(3*(pth->m_B*pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_
                      +pth->m_bidm   *pba->T_cmb*(1.+z)*_mykB_)
@@ -192,20 +192,21 @@ int thermodynamics_at_z(
                    "sigma < 0");
 
 
-      } else if (pth->bidm_type == newpowerlaw) {
+      } else if (pth->bidm_type == powerlaw) {
         //Be careful with R and R' definitions!
-        cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
+        cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
         //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
-        /*
+
         if (z > 1e3) {
           vrmssq = 1e-8;
         } else {
-          vrmssq = pow((1.+z)/1e3,2)*1e-8;}*/
-        vrmssq = 0;
+          vrmssq = pow((1.+z)/1e3,2)*1e-8;
+        }
+        //vrmssq = 0;
         vrel =  (pba->T_cmb*(1.+z)*_mykB_/pth->m_B
                +pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_/pth->m_bidm
                +vrmssq/3.0);
-        sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+        sigmav = cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
       }
       Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
@@ -213,7 +214,7 @@ int thermodynamics_at_z(
       if (pth->a_bidm == 0) {
         cbidm2 = 0;
       } else {
-        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * (1.+(1.+z)/(3*pth->a_bidm*pba->T_cmb*(1.+z)) * pth->a_bidm*pba->T_cmb);
+        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * 4./3.;
       }
 
       pvecthermo[pth->index_th_sigma] = sigmav;
@@ -2520,9 +2521,11 @@ int thermodynamics_reionization_sample(
   Tb = preco->recombination_table[i*preco->re_size+preco->index_re_Tb];
   Tbidm = preco->recombination_table[i*preco->re_size+preco->index_re_Tbidm]; //Markus: bidm temperature
   Rbidm = preco->recombination_table[i*preco->re_size+preco->index_re_Rbidm]; //Markus: bidm coupling
+  cbidm2 = preco->recombination_table[i*preco->re_size+preco->index_re_cbidm2]; //Markus: bidm sound speed
   reio_vector[preio->index_re_Tb] = Tb;
   reio_vector[preio->index_re_Tbidm] = Tbidm; //Markus
   reio_vector[preio->index_re_Rbidm] = Rbidm; //Markus
+  reio_vector[preio->index_re_cbidm2] = cbidm2; //Markus
 
   /** - --> after recombination, Tb scales like (1+z)**2. Compute constant factor Tb/(1+z)**2. */
   //Tba2 = Tb/(1+z)/(1+z);
@@ -2701,7 +2704,7 @@ int thermodynamics_reionization_sample(
         else {
           sigmav = 0;
         }
-      } else if (pth->bidm_type == powerlaw) {
+      } else if (pth->bidm_type == powerlawapprox) {
         //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
         vrel = pow(3*(pth->m_B*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]*_mykB_
                      +pth->m_bidm   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]*_mykB_)
@@ -2714,15 +2717,16 @@ int thermodynamics_reionization_sample(
                    "sigma < 0");
 
 
-      } else if (pth->bidm_type == newpowerlaw) {
+      } else if (pth->bidm_type == powerlaw) {
         //Be careful with R and R' definitions!
-        cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
+        cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
         //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
-        vrmssq = 0; //pow((1.+z)/1e3,2)*1e-8;
+        vrmssq = pow((1.+z)/1e3,2)*1e-8;
         vrel =  (preio->reionization_table[i*preio->re_size+preio->index_re_Tb]*_mykB_/pth->m_B
                +preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]*_mykB_/pth->m_bidm
                +vrmssq/3.0);
-        sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+        //printf("vrel/vrmssq = %f, z = %f\n", vrel/(vrmssq/3.), z);
+        sigmav = cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
       }
 
@@ -2737,18 +2741,28 @@ int thermodynamics_reionization_sample(
 
 
 
-      dTdz += -2.*mymu/pth->m_bidm*pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b]*
-              R_prime/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
+      dTdz += -2.*mymu/pth->m_bidm * pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b]*
+              R_prime/pvecback[pba->index_bg_H]*(preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
               -preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
       //printf("mu/M_dm = %f\n", mu/pth->m_bidm);
       dTdz_bidm = 2./(1+z)*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
-                  -2.*R_prime/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[i*preio->re_size+preio->index_re_Tb]
+                  -2.*R_prime/pvecback[pba->index_bg_H]*(preio->reionization_table[i*preio->re_size+preio->index_re_Tb]
                   -preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]);
       //printf("dTdz_bidm = %f\n", dTdz_bidm);
-      cbidm2 = _mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]/pth->m_bidm
-                  * (1.+(1.+z)/(3*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]) * dTdz_bidm);
-      printf("reio cbidm2 = %f\n", cbidm2);
+      if (preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm] == 0) {
+        cbidm2 = 0;
+      } else {
+        cbidm2 = _mykB_*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]/pth->m_bidm
+                    * (1.+(1.+z)/(3*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]) * dTdz_bidm);
+      }
+
+      //printf("reio cbidm2 = %f\n", cbidm2);
     }
+
+    /*printf("logdtdz_g = %f, logdtdz_dm = %f, z = %f\n",
+      log10(2.*mu/_m_e_*4.*pvecback[pba->index_bg_rho_g]/3./pvecback[pba->index_bg_rho_b]*opacity/pvecback[pba->index_bg_H]),
+      log10(2.*mymu/pth->m_bidm * pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b]*R_prime/pvecback[pba->index_bg_H]),
+      z);*/
 
     if (preco->annihilation > 0) {
 
@@ -2801,13 +2815,14 @@ int thermodynamics_reionization_sample(
                     ,pth->error_message,
                     "Error Tbidm < 0");
 
-        if (preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] < 0) {
+        if (preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] < preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm]) {
             preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] = preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tbidm];
                         }
 
         preio->reionization_table[i*preio->re_size+preio->index_re_Rbidm]=Rbidm;
         preio->reionization_table[i*preio->re_size+preio->index_re_sigma]=sigmav;
         preio->reionization_table[i*preio->re_size+preio->index_re_cbidm2]=cbidm2;
+        //printf("i = %i, c = %f, z = %f\n", i, cbidm2, z);
 
     }
 
@@ -2839,7 +2854,7 @@ int thermodynamics_reionization_sample(
         sigmav = 0;
       }
 
-    } else if (pth->bidm_type == powerlaw) {
+    } else if (pth->bidm_type == powerlawapprox) {
       vrel = pow(3*(pth->m_bidm*preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]
                    +pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb])
                    /pth->m_B/pth->m_bidm,0.5);
@@ -2847,25 +2862,25 @@ int thermodynamics_reionization_sample(
 
       //printf("sigma = %f, R = %f\n", sigmav, Rbidm);
     }
-    else if (pth->bidm_type == newpowerlaw) {
-      cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
-      vrmssq = 0; //pow((1.+z)/1e3,2)*1e-8;
+    else if (pth->bidm_type == powerlaw) {
+      cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
+      vrmssq = pow((1.+z)/1e3,2)*1e-8;
       vrel =  preio->reionization_table[0*preio->re_size+preio->index_re_Tb]*_mykB_/pth->m_B
              +preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]*_mykB_/pth->m_bidm
              +vrmssq/3.0;
-      sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+      sigmav = cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
     }
     Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
     dTdz_bidm = 2./(1+z)*preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]
-                -2.*R_prime/pvecback[pba->index_bg_H]/(1+z)*(preio->reionization_table[0*preio->re_size+preio->index_re_Tb]
+                -2.*R_prime/pvecback[pba->index_bg_H]*(preio->reionization_table[0*preio->re_size+preio->index_re_Tb]
                 -preio->reionization_table[0*preio->re_size+preio->index_re_Tbidm]);
 
 
     preio->reionization_table[0*preio->re_size+preio->index_re_sigma]=sigmav;
     preio->reionization_table[0*preio->re_size+preio->index_re_Rbidm]=Rbidm;
     preio->reionization_table[0*preio->re_size+preio->index_re_cbidm2]=cbidm2;
-    printf("reio cbidm2 = %f\n", cbidm2);
+    //printf("reio cbidm2 = %f\n", cbidm2);
 
   }
 
@@ -3190,7 +3205,7 @@ int thermodynamics_recombination_with_hyrec(
         else {
           sigmav = 0;
         }
-      } else if (pth->bidm_type == powerlaw) {
+      } else if (pth->bidm_type == powerlawapprox) {
         //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
         vrel = pow(3*(pth->m_B*pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_
                      +pth->m_bidm   *Tm*_mykB_)
@@ -3203,20 +3218,21 @@ int thermodynamics_recombination_with_hyrec(
                    "sigma < 0");
 
 
-      } else if (pth->bidm_type == newpowerlaw) {
+      } else if (pth->bidm_type == powerlaw) {
         //Be careful with R and R' definitions!
-        cn = pow(2,pth->n_bidm/2 + 2.5)*tgamma(3+pth->n_bidm/2)/(3*pow(M_PI,0.5));
+        cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
         //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
-        /*
+
         if (z > 1e3) {
           vrmssq = 1e-8;
         } else {
-          vrmssq = pow((1.+z)/1e3,2)*1e-8;}*/
-        vrmssq = 0;
+          vrmssq = pow((1.+z)/1e3,2)*1e-8;
+        }
+        //vrmssq = 0;
         vrel =  (Tm*_mykB_/pth->m_B
                +pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_/pth->m_bidm
                +vrmssq/3.0);
-        sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+        sigmav = cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
       }
 
@@ -3224,9 +3240,9 @@ int thermodynamics_recombination_with_hyrec(
       if (pth->a_bidm == 0) {
         cbidm2 = 0;
       } else {
-        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * (1.+(1.+z)/(3*pth->a_bidm*pba->T_cmb*(1.+z)) * pth->a_bidm*pba->T_cmb);
+        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * 4./3.;
       }
-      printf("reco cbidm2 = %f\n", cbidm2);
+      //printf("reco cbidm2 = %f\n", cbidm2);
 
       //printf("sigma = %f, rho = %f, R = %f, z = %f\n", sigmav, pvecback[pba->index_bg_rho_b], Rbidm, z);
     } else {
@@ -3686,7 +3702,7 @@ int thermodynamics_recombination_with_recfast(
         else {
           sigmav = 0;
         }
-      } else if (pth->bidm_type == powerlaw) {
+      } else if (pth->bidm_type == powerlawapprox) {
         //printf("T1 = %f, T2M2 = %f\n", preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm],pth->m_B   *preio->reionization_table[i*preio->re_size+preio->index_re_Tb]);
         vrel = pow(3*(pth->m_B*pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_
                      +pth->m_bidm   *y[2]*_mykB_)
@@ -3699,20 +3715,21 @@ int thermodynamics_recombination_with_recfast(
                    "sigma < 0");
 
 
-      } else if (pth->bidm_type == newpowerlaw) {
+      } else if (pth->bidm_type == powerlaw) {
         //Be careful with R and R' definitions!
         cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
         //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
-        /*
+
         if (z > 1e3-1) {
           vrmssq = 1e-8;
         } else {
-          vrmssq = pow((1.+z)/1e3,2)*1e-8;}*/
-        vrmssq = 0;
+          vrmssq = pow((1.+z)/1e3,2)*1e-8;
+        }
+        //vrmssq = 0;
         vrel =  (y[2]*_mykB_/pth->m_B
                +pth->a_bidm*pba->T_cmb*(1.+z)*_mykB_/pth->m_bidm
                +vrmssq/3.0);
-        sigmav = cn*pth->A_bidm/(1.0+z)/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+        sigmav = cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
       }
 
@@ -3720,9 +3737,9 @@ int thermodynamics_recombination_with_recfast(
       if (pth->a_bidm == 0) {
         cbidm2 = 0;
       } else {
-        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * (1.+(1.+z)/(3*pth->a_bidm*pba->T_cmb*(1.+z)) * pth->a_bidm*pba->T_cmb);
+        cbidm2 = _mykB_*pth->a_bidm*pba->T_cmb*(1.+z)/pth->m_bidm * 4./3.;
       }
-      printf("reco cbidm2 = %f\n", cbidm2);
+      //printf("reco cbidm2 = %f\n", cbidm2);
 
       //printf("sigma = %f, rho = %f, R = %f, z = %f\n", sigmav, tpaw.pvecback[pba->index_bg_rho_b], Rbidm, z);
     } else {
