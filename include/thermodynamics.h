@@ -183,6 +183,8 @@ struct thermo
   //double mu_bidm_B;
   //double a_B;
   double m_B;
+  double Q;
+  double cn;
 
 
 
@@ -488,6 +490,7 @@ struct thermodynamics_parameters_and_workspace {
 
   /* structures containing fixed input parameters (indices, ...) */
   struct background * pba;
+  struct thermo * pth;
   struct precision * ppr;
   struct recombination * preco;
 
@@ -570,6 +573,17 @@ extern "C" {
 				  struct reionization * preio,
 				  double * pvecback
 				  );
+
+  int thermodynamics_bidm(
+          double z,
+          struct background * pba,
+          struct thermo * pth,
+          double Tb,
+          double Tbidm,
+          double * R,
+          double * sigmav,
+          double * pvecback
+          );
 
   int thermodynamics_reionization_sample(
 					 struct precision * ppr,
@@ -681,7 +695,7 @@ extern "C" {
 
 //@{
 
-#define _RECFAST_INTEG_SIZE_ 3
+#define _RECFAST_INTEG_SIZE_ 4 //Number of dimensions in RECFAST integrator. Changed from 3 /Markus
 
 #define _Lambda_ 8.2245809
 #define _Lambda_He_ 51.3

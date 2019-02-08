@@ -63,7 +63,7 @@ def main():
     cosmo=Class()
     cosmo0=Class()
     title = 'Input:\n'
-    cosmo.set({'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
+    cosmo.set({'omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
     cosmo0.set({'f_bidm':0.4,'A_bidm':0,'gauge':'newtonian','output':'tCl mPk dTk vTk','omega_cdm':0.12038,'z_reio':11.357,'reionization_z_start_max':750})
     #print(s)
     if args.A_bidm:
