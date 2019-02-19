@@ -2169,7 +2169,7 @@ int background_output_titles(struct background * pba,
   /** - Length of the column title should be less than _OUTPUTPRECISION_+6
       to be indented correctly, but it can be as long as . */
   int n;
-  char tmp[20];
+  char tmp[24];
 
   class_store_columntitle(titles,"z",_TRUE_);
   class_store_columntitle(titles,"proper time [Gyr]",_TRUE_);
@@ -2340,6 +2340,10 @@ int background_derivs(
   rho_M = pvecback[pba->index_bg_rho_b];
   if (pba->has_cdm)
     rho_M += pvecback[pba->index_bg_rho_cdm];
+
+  if (pba->has_bidm)
+    rho_M += pvecback[pba->index_bg_rho_bidm]; //Markus bidm
+
   dy[pba->index_bi_D] = y[pba->index_bi_D_prime];
   dy[pba->index_bi_D_prime] = -a*H*y[pba->index_bi_D_prime] + 1.5*a*a*rho_M*y[pba->index_bi_D];
 

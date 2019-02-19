@@ -110,6 +110,7 @@ int thermodynamics_at_z(
   /** - define local variables */
 
   double x0;
+  double sigmav, Rbidm, cbidm2; //Markus
 
   /* - the fact that z is in the pre-computed range 0 <= z <= z_initial
      will be checked in the interpolation routines below. Before
@@ -118,7 +119,6 @@ int thermodynamics_at_z(
      using simple analytic approximations */
 
   if (z >= pth->z_table[pth->tt_size-1]) {
-    double sigmav, Rbidm, cbidm2;
 
 
     /* ionization fraction assumed to remain constant at large z */
@@ -174,7 +174,7 @@ int thermodynamics_at_z(
                           pvecback
                           );
 
-      Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
+      //Rbidm = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigmav;
 
       if (pth->a_bidm == 0) {
         cbidm2 = 0;
@@ -2395,11 +2395,11 @@ int thermodynamics_bidm(
                     struct thermo * pth,
                     double Tb,
                     double Tbidm,
-                    double * R,
+                    double * Rbidm,
                     double * sigmav,
                     double * pvecback
                     ) {
-    double vrel, sigma;
+    double vrel, sigma, R;
 
     if (pth->bidm_type == resonance) {
       double x_bidm = pth->m_bidm/(_mykB_*Tbidm);
@@ -2435,8 +2435,10 @@ int thermodynamics_bidm(
       sigma = pth->cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
     }
+    R = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigma;
+
     *sigmav = sigma;
-    *R = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigma;
+    *Rbidm = R;
 
     return _SUCCESS_;
 

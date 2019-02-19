@@ -43,7 +43,7 @@ int input_init_from_arguments(
 
   char input_file[_ARGUMENT_LENGTH_MAX_];
   char precision_file[_ARGUMENT_LENGTH_MAX_];
-  char tmp_file[_ARGUMENT_LENGTH_MAX_];
+  char tmp_file[_ARGUMENT_LENGTH_MAX_+26];
 
   int i;
   char extension[5];
@@ -330,6 +330,7 @@ int input_init(
                      shooting_failed=_TRUE_);
 
       /* Store xzero */
+	printf("xzero: %.16f, shooting failed: %d\n",xzero,shooting_failed);
       sprintf(fzw.fc.value[fzw.unknown_parameters_index[0]],"%e",xzero);
       if (input_verbose > 0) {
         fprintf(stdout,"Computing unknown input parameters\n");
@@ -4139,7 +4140,7 @@ int input_find_root(double *xzero,
                                errmsg),
                  errmsg, errmsg);
   (*fevals)++;
-  //printf("x1= %g, f1= %g\n",x1,f1);
+  printf("x1= %g, f1= %g\n",x1,f1);
 
   dx = 1.5*f1*dxdy;
 
@@ -4151,13 +4152,14 @@ int input_find_root(double *xzero,
     for (iter2=1; iter2 <= 3; iter2++) {
       return_function = input_fzerofun_1d(x2,pfzw,&f2,errmsg);
       (*fevals)++;
-      //printf("x2= %g, f2= %g\n",x2,f2);
+      printf("x2= %g, f2= %g\n",x2,f2);
       //fprintf(stderr,"iter2=%d\n",iter2);
 
       if (return_function ==_SUCCESS_) {
         break;
       }
       else if (iter2 < 3) {
+	printf("Function failed with errmsg:%s\n",errmsg);
         dx*=0.5;
         x2 = x1-dx;
       }

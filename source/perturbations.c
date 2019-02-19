@@ -4188,7 +4188,7 @@ int perturb_initial_conditions(struct precision * ppr,
     fracb = ppw->pvecback[pba->index_bg_rho_b]/rho_m;
 
     /* f_cdm = Omega_cdm(t_i) / Omega_m(t_i) */
-    fraccdm = 1.-fracb; //Markus: Is this consistent?
+    fraccdm = 1.-fracb; //Markus: Is this consistent? Yes.
 
     /* Omega_m(t_i) / Omega_r(t_i) */
     rho_m_over_rho_r = rho_m/rho_r;
@@ -4486,7 +4486,7 @@ int perturb_initial_conditions(struct precision * ppr,
       else if (pba->has_dcdm == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dcdm];
       else if (pba->has_bidm == _TRUE_)
-        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_bidm]; //Markus: consistent?
+        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_bidm]; //Markus: consistent? Never relevant
       else
         delta_cdm=0.;
 
