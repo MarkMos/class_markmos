@@ -1921,8 +1921,8 @@ int thermodynamics_reionization(
 
       if (pth->reio_parametrization == reio_camb) {
 
-        //preio->reionization_parameters[preio->index_reio_start] = preio->reionization_parameters[preio->index_reio_redshift]+ppr->reionization_start_factor*pth->reionization_width;
-        preio->reionization_parameters[preio->index_reio_start] = pth->z_reiomod_start;
+        preio->reionization_parameters[preio->index_reio_start] = preio->reionization_parameters[preio->index_reio_redshift]+ppr->reionization_start_factor*pth->reionization_width;
+        //preio->reionization_parameters[preio->index_reio_start] = pth->z_reiomod_start;
 
         /* if starting redshift for helium is larger, take that one
            (does not happen in realistic models) */
