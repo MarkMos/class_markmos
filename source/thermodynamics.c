@@ -689,6 +689,33 @@ int thermodynamics_init(
                pth->error_message);
   }
 
+  if (pba->has_bidm == _TRUE_) { //Markus
+    /** - ---> second derivative with respect to tau of Rbidm */
+    class_call(array_spline_table_line_to_line(tau_table,
+                                               pth->tt_size,
+                                               pth->thermodynamics_table,
+                                               pth->th_size,
+                                               pth->index_th_Rbidm,
+                                               pth->index_th_Rddot,
+                                               _SPLINE_EST_DERIV_,
+                                               pth->error_message),
+               pth->error_message,
+               pth->error_message);
+
+
+    /** - ---> first derivative with respect to tau of Rbidm (using spline interpolation) */
+    class_call(array_derive_spline_table_line_to_line(tau_table,
+                                                      pth->tt_size,
+                                                      pth->thermodynamics_table,
+                                                      pth->th_size,
+                                                      pth->index_th_Rbidm,
+                                                      pth->index_th_Rddot,
+                                                      pth->index_th_Rdot,
+                                                      pth->error_message),
+               pth->error_message,
+               pth->error_message);
+  }
+
   free(tau_table);
 
   /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
@@ -1010,6 +1037,10 @@ int thermodynamics_indices(
     index++;
     pth->index_th_cbidm2 = index;
     index++;
+    pth->index_th_Rdot = index;
+    index++;
+    pth->index_th_Rddot = index;
+    index++;
   //}
 
   /* derivatives of baryon sound speed (only computed if some non-minimal tight-coupling schemes is requested) */
@@ -1054,6 +1085,8 @@ int thermodynamics_indices(
     index++;
     preco->index_re_cbidm2 = index;
     index++;
+    //preco->index_re_Rdot = index;
+    //index++;
   //}
 
   /* end of indices */
@@ -1086,6 +1119,8 @@ int thermodynamics_indices(
     index++;
     preio->index_re_cbidm2 = index;
     index++;
+    //preio->index_re_Rdot = index;
+    //index++;
   //}
 
   /* end of indices */
@@ -2487,7 +2522,7 @@ int thermodynamics_reionization_sample(
   double xe,xe_next;
   double dkappadz,dkappadz_next;
   double Tb,Yp,dTdz,opacity,mu;
-  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, cbidm2, mymu; //Markus
+  double Tbidm, dTdz_bidm, Rbidm, R_prime, sigmav, cbidm2, mymu;// Rdot; //Markus
   double dkappadtau,dkappadtau_next;
   double energy_rate;
   double tau;
@@ -2797,6 +2832,23 @@ int thermodynamics_reionization_sample(
 
     }
 
+    /** Comtute Rdot /Markus
+    if (pba->has_bidm == _TRUE_) {
+
+      if (pth->bidm_type == powerlaw) {
+        Rdot = -2*pvecback[pba->index_bg_H] * a *Rbidm
+               - (pth->n_bidm+1.)/2. * pvecback[pba->index_bg_H]
+               * (dTdz/pth->m_B + dTdz_bidm/pth->m_bidm - pvecback[pba->index_bg_H]*(1+z)*2e-14/3.)*Rbidm
+               / (preio->reionization_table[i*preio->re_size+preio->index_re_Tb]/pth->m_B
+                 +preio->reionization_table[i*preio->re_size+preio->index_re_Tbidm]/pth->m_bidm
+                 +1e-14 * (1+z)*(1+z));
+
+      }
+
+    } else {
+      Rdot = 0;
+    }*/
+
     /** - --> increment baryon temperature */
 
     preio->reionization_table[(i-1)*preio->re_size+preio->index_re_Tb] =
@@ -2831,6 +2883,7 @@ int thermodynamics_reionization_sample(
         preio->reionization_table[i*preio->re_size+preio->index_re_Rbidm]=Rbidm;
         preio->reionization_table[i*preio->re_size+preio->index_re_sigma]=sigmav;
         preio->reionization_table[i*preio->re_size+preio->index_re_cbidm2]=cbidm2;
+    //    preio->reionization_table[i*preio->re_size+preio->index_re_Rdot]=Rdot;
         //printf("i = %i, c = %f, z = %f\n", i, cbidm2, z);
 
     }
@@ -4208,8 +4261,10 @@ int thermodynamics_merge_reco_and_reio(
       preio->reionization_table[i*preio->re_size+preio->index_re_Rbidm]; //Markus
     pth->thermodynamics_table[i*pth->th_size+pth->index_th_sigma]=
       preio->reionization_table[i*preio->re_size+preio->index_re_sigma]; //Markus
-      pth->thermodynamics_table[i*pth->th_size+pth->index_th_cbidm2]=
-        preio->reionization_table[i*preio->re_size+preio->index_re_cbidm2]; //Markus
+    pth->thermodynamics_table[i*pth->th_size+pth->index_th_cbidm2]=
+      preio->reionization_table[i*preio->re_size+preio->index_re_cbidm2]; //Markus
+    //pth->thermodynamics_table[i*pth->th_size+pth->index_th_Rdot]=
+    //  preio->reionization_table[i*preio->re_size+preio->index_re_Rdot]; //Markus
     pth->thermodynamics_table[i*pth->th_size+pth->index_th_cb2]=
       preio->reionization_table[i*preio->re_size+preio->index_re_cb2];
   }
@@ -4230,8 +4285,10 @@ int thermodynamics_merge_reco_and_reio(
       preco->recombination_table[index_re*preco->re_size+preco->index_re_Rbidm]; //Markus
     pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_sigma]=
       preco->recombination_table[index_re*preco->re_size+preco->index_re_sigma]; //Markus
-      pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_cbidm2]=
-        preco->recombination_table[index_re*preco->re_size+preco->index_re_cbidm2]; //Markus
+    pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_cbidm2]=
+      preco->recombination_table[index_re*preco->re_size+preco->index_re_cbidm2]; //Markus
+    //pth->thermodynamics_table[i*pth->th_size+pth->index_th_Rdot]=
+    //  preio->reionization_table[i*preio->re_size+preio->index_re_Rdot]; //Markus
     pth->thermodynamics_table[index_th*pth->th_size+pth->index_th_cb2]=
       preco->recombination_table[index_re*preco->re_size+preco->index_re_cb2];
   }

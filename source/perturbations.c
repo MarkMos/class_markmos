@@ -7010,6 +7010,9 @@ int perturb_derivs(double tau,
   /* for use with dcdm and dr */
   double f_dr, fprime_dr;
 
+  /* for use with tca with bidm /Markus */
+  double S, beta, tau_bidm, dtau_bidm, tau_c;
+
   /** - rename the fields of the input structure (just to avoid heavy notations) */
 
   pppaw = parameters_and_workspace;
@@ -7213,12 +7216,40 @@ int perturb_derivs(double tau,
                  error_message,
                  error_message);
 
-      /* perturbed recombination has an impact **/
-      dy[pv->index_pt_theta_b] =
-        (-a_prime_over_a*theta_b
-         +k2*(cb2*(delta_b+delta_temp)+R*(delta_g/4.-s2_squared*ppw->tca_shear_g))
-         +R*ppw->tca_slip)/(1.+R)
-        +metric_euler;
+
+      if (pba->has_bidm == _TRUE_ && pth->A_bidm != 0) { //tca with bidm /Markus
+        tau_c = 1./pvecthermo[pth->index_th_dkappa];
+        S = pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b];
+        tau_bidm = 1./pvecthermo[pth->index_th_Rbidm];
+        dtau_bidm = - pvecthermo[pth->index_th_Rdot]/pvecthermo[pth->index_th_Rbidm]/pvecthermo[pth->index_th_Rbidm];
+        beta = S/(1+R) * tau_c/tau_bidm;
+
+        dy[pv->index_pt_theta_bidm] =
+          -a_prime_over_a*y[pv->index_pt_theta_bidm]
+          //+pvecthermo[pth->index_th_cbidm2]*k2*y[pv->index_pt_delta_bidm]
+          +metric_euler
+          +pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+
+        dy[pv->index_pt_theta_b] =
+          (
+            -a_prime_over_a*theta_b
+            +k2*cb2*(delta_b+delta_temp)
+            +k2*R*(delta_g/4.-s2_squared*ppw->tca_shear_g)
+            +R*ppw->tca_slip
+            +R*beta*(a_prime_over_a-dtau_bidm/tau_bidm)*(y[pv->index_pt_theta_bidm]-theta_b)
+            +S/tau_bidm *(y[pv->index_pt_theta_bidm]-theta_b)
+            +R*beta*dy[pv->index_pt_theta_bidm]
+          )/(1+R+beta*R)
+          +metric_euler;
+
+      } else {
+        /* perturbed recombination has an impact **/
+        dy[pv->index_pt_theta_b] =
+          (-a_prime_over_a*theta_b
+           +k2*(cb2*(delta_b+delta_temp)+R*(delta_g/4.-s2_squared*ppw->tca_shear_g))
+           +R*ppw->tca_slip)/(1.+R)
+          +metric_euler;
+      }
 
     }
 
@@ -7306,11 +7337,19 @@ int perturb_derivs(double tau,
 
         /** - -----> in that case, only need photon velocity */
 
+        if (pba->has_bidm == _TRUE_ && pth->A_bidm != 0) { // tca with bidm /Markus
 
+        dy[pv->index_pt_theta_g] =
+          -(dy[pv->index_pt_theta_b]+a_prime_over_a*theta_b-cb2*k2*(delta_b+delta_temp))/R
+          +k2*(0.25*delta_g-s2_squared*ppw->tca_shear_g)+(1.+R)/R*metric_euler
+          + S/R/tau_bidm * (y[pv->index_pt_theta_bidm]-theta_b);
+
+        } else {
         /* perturbed recombination has an impact **/
         dy[pv->index_pt_theta_g] =
           -(dy[pv->index_pt_theta_b]+a_prime_over_a*theta_b-cb2*k2*(delta_b+delta_temp))/R
           +k2*(0.25*delta_g-s2_squared*ppw->tca_shear_g)+(1.+R)/R*metric_euler;
+        }
       }
     }
 
@@ -7339,7 +7378,8 @@ int perturb_derivs(double tau,
 
       //printf("logR = %f, R = %f, sigma = %f, Tdm = %f, Tb = %f\n", log10(pvecthermo[pth->index_th_Rbidm]),pvecthermo[pth->index_th_Rbidm],pvecthermo[pth->index_th_sigma],pvecthermo[pth->index_th_Tbidm],pvecthermo[pth->index_th_Tb]);
       //printf("cbidm2 = %f, Rbidm = %f\n", pvecthermo[pth->index_th_cbidm2], pvecthermo[pth->index_th_Rbidm]);
-      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] + pvecthermo[pth->index_th_cbidm2]*k*k*y[pv->index_pt_delta_bidm]  + metric_euler + pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
+      dy[pv->index_pt_theta_bidm] = - a_prime_over_a*y[pv->index_pt_theta_bidm] //+ pvecthermo[pth->index_th_cbidm2]*k2*y[pv->index_pt_delta_bidm]
+          + metric_euler + pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
       dy[pv->index_pt_theta_b] -= ppw->pvecback[pba->index_bg_rho_bidm]/ppw->pvecback[pba->index_bg_rho_b]*pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]);
     }
 
@@ -8046,6 +8086,11 @@ int perturb_tca_slip_and_shear(double * y,
   /* for use with curvature */
   double s2_squared;
 
+  /* parameters for bidm /Markus */
+  double S;
+  double beta;
+  double tau_bidm, dtau_bidm;
+
   /** - rename the fields of the input structure (just to avoid heavy notations) */
 
   pppaw = parameters_and_workspace;
@@ -8139,6 +8184,7 @@ int perturb_tca_slip_and_shear(double * y,
   if (ppw->approx[ppw->index_ap_rsa] == (int)rsa_on)
     theta_g = ppw->rsa_theta_g;
 
+//Markus : Change slip equations for bidm?
 
   /** - ---> like Ma & Bertschinger */
   if (ppr->tight_coupling_approximation == (int)first_order_MB) {
