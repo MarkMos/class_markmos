@@ -6678,7 +6678,7 @@ int perturb_print_variables(double tau,
     }
 
     /* converting synchronous variables to newtonian ones */
-    if (ppt->gauge == synchronous) {
+    if (ppt->gauge == synchronous && ppt->output_newtonian == yes) {
 
       /* density and velocity perturbations (comment out if you wish to keep synchronous variables) */
 
@@ -7217,7 +7217,7 @@ int perturb_derivs(double tau,
                  error_message);
 
 
-      if (pba->has_bidm == _TRUE_ && pth->A_bidm != 0) { //tca with bidm /Markus
+      if (pba->has_bidm == _TRUE_ ) { //tca with bidm /Markus
         tau_c = 1./pvecthermo[pth->index_th_dkappa];
         S = pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b];
         tau_bidm = 1./pvecthermo[pth->index_th_Rbidm];
@@ -7226,7 +7226,7 @@ int perturb_derivs(double tau,
 
         dy[pv->index_pt_theta_bidm] =
           -a_prime_over_a*y[pv->index_pt_theta_bidm]
-          //+pvecthermo[pth->index_th_cbidm2]*k2*y[pv->index_pt_delta_bidm]
+          +pvecthermo[pth->index_th_cbidm2]*k2*y[pv->index_pt_delta_bidm]
           +metric_euler
           +pvecthermo[pth->index_th_Rbidm]*(theta_b-y[pv->index_pt_theta_bidm]); /* bidm velocity /Markus */
 
@@ -7337,7 +7337,7 @@ int perturb_derivs(double tau,
 
         /** - -----> in that case, only need photon velocity */
 
-        if (pba->has_bidm == _TRUE_ && pth->A_bidm != 0) { // tca with bidm /Markus
+        if (pba->has_bidm == _TRUE_) { // tca with bidm /Markus
 
         dy[pv->index_pt_theta_g] =
           -(dy[pv->index_pt_theta_b]+a_prime_over_a*theta_b-cb2*k2*(delta_b+delta_temp))/R

@@ -57,6 +57,7 @@ enum possible_gauges {
   newtonian, /**< newtonian (or longitudinal) gauge */
   synchronous /**< synchronous gauge with \f$ \theta_{cdm} = 0 \f$ by convention */
 };
+enum output_gauge_newtonian {yes, no}; //Markus
 
 //@}
 
@@ -76,7 +77,7 @@ enum selection_type {gaussian,tophat,dirac};
 /**
  * maximum number of k-values for perturbation output
  */
-#define _MAX_NUMBER_OF_K_FILES_ 30
+#define _MAX_NUMBER_OF_K_FILES_ 100000
 
 //@}
 
@@ -200,6 +201,7 @@ struct perturbs
   //@{
 
   enum possible_gauges gauge; /**< gauge in which to perform this calculation */
+  enum output_gauge_newtonian output_newtonian; //Markus
 
   //@}
 

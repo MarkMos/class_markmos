@@ -2434,7 +2434,7 @@ int thermodynamics_bidm(
                     double * sigmav,
                     double * pvecback
                     ) {
-    double vrel, sigma, R;
+    double vrelsq,vrmssq , sigma, R;
 
     if (pth->bidm_type == resonance) {
       double x_bidm = pth->m_bidm/(_mykB_*Tbidm);
@@ -2448,10 +2448,10 @@ int thermodynamics_bidm(
         sigma = 0;
       }
     } else if (pth->bidm_type == powerlawapprox) {
-      vrel = pow(3*(pth->m_B*Tbidm*_mykB_
+      vrelsq = pow(3*(pth->m_B*Tbidm*_mykB_
                    +pth->m_bidm   *Tb*_mykB_)
                    /pth->m_B/pth->m_bidm,0.5);
-      sigma = pth->A_bidm*pow(vrel,pth->n_bidm);
+      sigma = pth->A_bidm*pow(vrelsq,pth->n_bidm);
 
       class_test((*sigmav < 0),
                  pth->error_message,
@@ -2462,12 +2462,17 @@ int thermodynamics_bidm(
       //Be careful with R and R' definitions!
 
       //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
-      double vrmssq = pow((1.+z)/1e3,2)*1e-8;
-      vrel =  (Tb*_mykB_/pth->m_B
+      if (z > 1e3) {
+        vrmssq = 1e-8;
+      } else {
+        vrmssq = pow((1.+z)/1e3,2)*1e-8;
+      }
+
+      vrelsq =  (Tb*_mykB_/pth->m_B
              +Tbidm*_mykB_/pth->m_bidm
              +vrmssq/3.0);
       //printf("vrel/vrmssq = %f, z = %f\n", vrel/(vrmssq/3.), z);
-      sigma = pth->cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrel,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+      sigma = pth->cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrelsq,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
     }
     R = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigma;
@@ -4166,7 +4171,7 @@ int thermodynamics_derivs_with_recfast(
     dy[2] = preco->Tnow + epsilon*((1.+preco->fHe)/(1.+preco->fHe+x))*((dy[0]+preco->fHe*dy[1])/x)
       - epsilon* dHdz/Hz + 3.*epsilon/(1.+z);
     if (pba->has_bidm == _TRUE_) {
-      dy[2]+=-2*mymu/pth->m_bidm * pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b] * R_prime/Hz * (Tbidm-Tmat);
+      //dy[2]+=-2*mymu/pth->m_bidm * pvecback[pba->index_bg_rho_bidm]/pvecback[pba->index_bg_rho_b] * R_prime/Hz * (Tbidm-Tmat);
       dy[3]= 2.*Tbidm/(1.+z) - 2*R_prime/Hz * (Tmat-Tbidm);
     }
     else {

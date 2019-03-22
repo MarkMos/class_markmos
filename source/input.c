@@ -598,6 +598,19 @@ int input_read_parameters(
     }
   }
 
+  class_call(parser_read_string(pfc,"output_newtonian",&string1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  if (flag1 == _TRUE_) {
+    if ((strstr(string1,"yes") != NULL) || (strstr(string1,"Yes") != NULL) || (strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL) || (strstr(string1,"1") != NULL)) {
+      ppt->output_newtonian = yes;
+    }
+
+    if ((strstr(string1,"no") != NULL) || (strstr(string1,"No") != NULL) || (strstr(string1,"n") != NULL) || (strstr(string1,"N") != NULL) || (strstr(string1,"0") != NULL)) {
+      ppt->output_newtonian = no;
+    }
+  }
+
   /** (a) background parameters */
 
   /** - scale factor today (arbitrary) */
@@ -3203,6 +3216,7 @@ int input_default_params(
   ppt->k_max_for_pk=1.;
 
   ppt->gauge=synchronous;
+  ppt->output_newtonian=yes; //Markus
 
   ppt->k_output_values_num=0;
   ppt->store_perturbations = _FALSE_;
