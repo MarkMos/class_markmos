@@ -853,14 +853,10 @@ int input_read_parameters(
       pth->bidm_type=powerlaw;
       flag2=_TRUE_;
     }
-    if (strcmp(string1,"powerlawapprox") == 0) {
-      pth->bidm_type=powerlawapprox;
-      flag2=_TRUE_;
-    }
 
     class_test(flag2==_FALSE_,
                errmsg,
-               "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw', 'powerlawapprox'...");
+               "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw'...");
   }
 
   /*

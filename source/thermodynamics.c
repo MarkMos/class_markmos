@@ -2442,23 +2442,12 @@ int thermodynamics_bidm(
       double input = pth->Q/2*pow(x_bidm*x_b,0.5);
 
       if (input < 700.0) {
-        sigma = pth->A_bidm*x_bidm*x_b*pow(pth->Q,1.5)/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(input);
+        sigma = pth->A_bidm*x_bidm*x_b*pow(pth->Q,1.5)*_myhbar_*_myhbar_/pth->m_bidm/pth->m_B*gsl_sf_bessel_K1(input);
       }
       else {
         sigma = 0;
       }
-    } else if (pth->bidm_type == powerlawapprox) {
-      vrelsq = pow(3*(pth->m_B*Tbidm*_mykB_
-                   +pth->m_bidm   *Tb*_mykB_)
-                   /pth->m_B/pth->m_bidm,0.5);
-      sigma = pth->A_bidm*pow(vrelsq,pth->n_bidm);
-
-      class_test((*sigmav < 0),
-                 pth->error_message,
-                 "sigma < 0");
-
-
-    } else if (pth->bidm_type == powerlaw) {
+    }  else if (pth->bidm_type == powerlaw) {
       //Be careful with R and R' definitions!
 
       //printf("part1 = %f, part2 = %f, Gamma(3) =%f\n", pow(2,pth->n_bidm/2 + 2.5), 3+pth->n_bidm/2, lgamma(3));
@@ -2472,10 +2461,10 @@ int thermodynamics_bidm(
              +Tbidm*_mykB_/pth->m_bidm
              +vrmssq/3.0);
       //printf("vrel/vrmssq = %f, z = %f\n", vrel/(vrmssq/3.), z);
-      sigma = pth->cn*pth->A_bidm/(pth->m_bidm+pth->m_B) * pow(vrelsq,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
+      sigma = pth->cn*pth->A_bidm * pow(vrelsq,(pth->n_bidm+1.0)/2.0)*(1-pth->YHe);
 
     }
-    R = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(1+z)*sigma;
+    R = _C_phys_ *_Mpc_over_m_*100 * pvecback[pba->index_bg_rho_b]/(pth->m_bidm+pth->m_B)/(1+z)*sigma;
 
     *sigmav = sigma;
     *Rbidm = R;
