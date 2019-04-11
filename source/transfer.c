@@ -1100,7 +1100,7 @@ int transfer_get_q_list(
   /* create array with this conservative size estimate. The exact size
      will be readjusted below, after filling the array. */
 
-     printf("q_size_max = %i \n", q_size_max); //Markus
+     //printf("q_size_max = %i \n", q_size_max); //Markus
 
   class_alloc(ptr->q,
               q_size_max*sizeof(double),

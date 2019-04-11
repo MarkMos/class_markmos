@@ -810,9 +810,27 @@ int input_read_parameters(
   class_read_double("C_bidm",pba->C_bidm); //baryon dark matter interaction rate (deprecated) /Markus
   //class_read_double("S_bidm",pth->S_bidm); // bidm spin
   //class_read_double("ci_bidm",pth->ci_bidm);  // bidm isospin coupling coefficient
-  class_read_double("A_bidm",pth->A_bidm); // bidm coupling strength (cross section in cm^2)
+  //class_read_double("A_bidm",pth->A_bidm); // bidm coupling strength (cross section in cm^2)
   //class_read_double("alpha_bidm",pth->alpha_bidm); // power laww index
   //class_read_double("beta_bidm",pth->beta_bidm); // power laww index
+
+  class_call(parser_read_double(pfc,"A_bidm",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  class_call(parser_read_double(pfc,"logA_bidm",&param2,&flag2,errmsg),
+             errmsg,
+             errmsg);
+
+  class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+              errmsg,
+              "In input file, you can only enter one of A_bidm or logA_bidm, choose one");
+
+  if (flag1 == _TRUE_) {
+      pth->A_bidm = param1;
+
+  } else if (flag2==_TRUE_) {
+      pth->A_bidm = pow(10,param2); //CHECK LATER /Markus
+  }
 
 
   class_read_double("m_bidm",pth->m_bidm); // bidm mass /Markus

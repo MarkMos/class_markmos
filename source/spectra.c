@@ -1556,7 +1556,7 @@ int spectra_init(
              psp->error_message,
              psp->error_message);
 
-  printf("spectra idices done\n"); //Markus
+  //printf("spectra idices done\n"); //Markus
 
   /** - deal with \f$ C_l\f$'s, if any */
 
