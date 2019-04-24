@@ -386,6 +386,8 @@ int input_init(
       fprintf(stdout,"Shooting completed using %d function evaluations\n",fevals);
     }
 
+    printf("ready to read\n");
+
 
     /** - --> Read all parameters from tuned pfc */
     class_call(input_read_parameters(&(fzw.fc),
@@ -784,6 +786,8 @@ int input_read_parameters(
              errmsg,
              "In input file, you have f_idm_dr!=0. but a_dark=0."); */
 
+  printf("bidm read\n");
+
   //this is the standard CDM case
   if (flag3 == _FALSE_){
     if (flag1 == _TRUE_)
@@ -875,6 +879,14 @@ int input_read_parameters(
     class_test(flag2==_FALSE_,
                errmsg,
                "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw'...");
+  }
+
+  printf("bidm type defined\n");
+
+  if (pth->bidm_type==resonance && flag4 == _TRUE_) {
+    printf("Warning: using custom a_bidm with resonance type DM may be unphysical\n");
+  } else if (pth->bidm_type==resonance) {
+    pth->a_bidm = input_interp_a_bidm(pth->m_bidm, pth->A_bidm, ppr);
   }
 
   /*
@@ -3173,7 +3185,7 @@ int input_default_params(
   pth->Delta_bidm =2000+3e-11; //5e6*1.7826619e-30;
   pth->epsilon_bidm = 3e-11;
   pth->n_bidm = 4;
-  pth->bidm_type = resonance;
+  pth->bidm_type = powerlaw;
   //pth->S_bidm = 0.5;
   //pth->alpha_bidm = 0;
   //pth->beta_bidm = 0;
@@ -4471,4 +4483,104 @@ int input_prepare_pk_eq(
 
   return _SUCCESS_;
 
+}
+
+/* Function to interpolate in array of a_bidm as a function of m_bidm and a_bidm for resonance type bidm //Markus */
+
+double input_interp_a_bidm(double M, double A, struct precision * ppr) {
+
+  sprintf(ppr->Afile,__CLASSDIR__);
+  strcat(ppr->Afile,"/resonance_DM_input/logAlist.txt");
+
+  sprintf(ppr->Mfile,__CLASSDIR__);
+  strcat(ppr->Mfile,"/resonance_DM_input/logMlist.txt");
+
+  sprintf(ppr->afile,__CLASSDIR__);
+  strcat(ppr->afile,"/resonance_DM_input/logagrid.txt");
+
+  FILE * AFILE = fopen(ppr->Afile,"r");
+  FILE * aFILE = fopen(ppr->afile,"r");
+  FILE * MFILE = fopen(ppr->Mfile,"r");
+
+  printf("interpolating in a\n");
+
+  double logM = log10(M);
+  double logA = log10(A);
+
+  char str[60];
+
+  int i;
+
+  double number;
+
+  double Ms[50];
+  double As[100];
+  double as[5000];
+
+  printf("reading files\n");
+
+  for (i = 0; i < 100; i++) {
+    printf("step1\n");
+    printf("path = %s\n", ppr->Afile);
+    if( fgets (str, 60, AFILE)!=NULL ) {
+      printf("step2\n");
+        number = atof(str);
+        printf("step3\n");
+        As[i] = number;
+        printf("step4\n");
+     }
+  }
+  printf("closing\n");
+   fclose(AFILE);
+   printf("closed\n");
+
+   for (i = 0; i < 50; i++) {
+     if( fgets (str, 60, MFILE)!=NULL ) {
+        number = atof(str);
+        Ms[i] = atof(str);
+      }
+   }
+
+    fclose(MFILE);
+
+    for (size_t i = 0; i < 5000; i++) {
+      if( fgets (str, 60, aFILE)!=NULL ) {
+          number = atof(str);
+          as[i] = number;
+       }
+    }
+
+     fclose(aFILE);
+
+     printf("defining interpolator\n");
+
+
+
+     gsl_interp2d * interper = gsl_interp2d_alloc(gsl_interp2d_bicubic, 50, 100);
+
+     gsl_interp2d_init(interper, Ms, As, as, 50, 100);
+
+     gsl_interp_accel * accM = gsl_interp_accel_alloc();
+     gsl_interp_accel * accA = gsl_interp_accel_alloc();
+
+     printf("interpolating\n");
+
+     if (logM < Ms[49] && logM > Ms[0] && logA < As[99] && logA > As[0]) {
+       number = gsl_interp2d_eval(interper, Ms, As, as, logM, logA, accM, accA);
+     } else {
+      fprintf(stdout, "Warning: Extrapolating a_bidm\n");
+       number = gsl_interp2d_eval_extrap(interper, Ms, As, as, logM, logA, accM, accA);
+     }
+
+     printf("freeing\n");
+
+
+
+     gsl_interp2d_free(interper);
+     gsl_interp_accel_free(accM);
+     gsl_interp_accel_free(accA);
+
+     printf("a = %f\n", pow(10,number));
+
+  return pow(10,number);
 }

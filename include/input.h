@@ -16,6 +16,10 @@
 #include "lensing.h"
 #include "output.h"
 
+#include<gsl/gsl_interp.h> //Markus
+#include<gsl/gsl_interp2d.h> //Markus
+#include<gsl/gsl_spline.h> //Markus
+
 /* macro for reading parameter values with routines from the parser */
 #define class_read_double(name,destination)				\
   do {									\
@@ -284,6 +288,8 @@ extern "C" {
                           int input_verbose,
                           ErrorMsg errmsg
                           );
+
+  double input_interp_a_bidm(double M, double A,struct precision * ppr);
 
 
 #ifdef __cplusplus

@@ -486,6 +486,11 @@ struct precision
   FileName hyrec_R_inf_file;
   FileName hyrec_two_photon_tables_file;
 /* @endcond */
+
+  FileName Afile; //Markus
+  FileName afile; //Markus
+  FileName Mfile; //Markus
+
   /* - for reionization */
 
   double reionization_z_start_max; /**< maximum redshift at which reionization should start. If not, return an error. */
