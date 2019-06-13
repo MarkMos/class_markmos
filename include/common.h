@@ -488,7 +488,9 @@ struct precision
 /* @endcond */
 
   FileName Afile; //Markus
-  FileName afile; //Markus
+  FileName alowfile; //Markus
+  FileName ahighfile; //Markus
+  FileName efile; //Markus
   FileName Mfile; //Markus
 
   /* - for reionization */

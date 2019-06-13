@@ -351,7 +351,7 @@ int thermodynamics_init(
       printf("\n");
   }
   if (pba->has_bidm == _TRUE_) {
-    double m_B = 1000;//pth->YHe*_not4_*_m_H_ + (1.-pth->YHe)*_m_H_;
+    double m_B = 938;//pth->YHe*_not4_*_m_H_ + (1.-pth->YHe)*_m_H_;
     pth->m_B = m_B;
     pth->cn = pow(2,pth->n_bidm/2. + 2.5)*tgamma(3+pth->n_bidm/2.)/(3*pow(M_PI,0.5));
     pth->Q = pth->epsilon_bidm*(2*pth->m_B+2*pth->m_bidm+pth->epsilon_bidm)/2/pth->m_bidm/pth->m_B;

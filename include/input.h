@@ -289,7 +289,8 @@ extern "C" {
                           ErrorMsg errmsg
                           );
 
-  double input_interp_a_bidm(double M, double A,struct precision * ppr);
+  double input_interp_a_bidm(double M, double A, double e, struct precision * ppr);
+  int search(int n, double * x, double z);
 
 
 #ifdef __cplusplus

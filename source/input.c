@@ -881,12 +881,12 @@ int input_read_parameters(
                "could not identify bidm_type value, check that it is one of 'resonance', 'powerlaw'...");
   }
 
-  printf("bidm type defined\n");
+  //printf("bidm type defined\n");
 
   if (pth->bidm_type==resonance && flag4 == _TRUE_) {
     printf("Warning: using custom a_bidm with resonance type DM may be unphysical\n");
   } else if (pth->bidm_type==resonance) {
-    pth->a_bidm = input_interp_a_bidm(pth->m_bidm, pth->A_bidm, ppr);
+    pth->a_bidm = input_interp_a_bidm(pth->m_bidm, pth->A_bidm, pth->epsilon_bidm, ppr);
   }
 
   /*
@@ -4487,7 +4487,7 @@ int input_prepare_pk_eq(
 
 /* Function to interpolate in array of a_bidm as a function of m_bidm and a_bidm for resonance type bidm //Markus */
 
-double input_interp_a_bidm(double M, double A, struct precision * ppr) {
+double input_interp_a_bidm(double M, double A, double e, struct precision * ppr) {
 
   sprintf(ppr->Afile,__CLASSDIR__);
   strcat(ppr->Afile,"/resonance_DM_input/logAlist.txt");
@@ -4495,47 +4495,54 @@ double input_interp_a_bidm(double M, double A, struct precision * ppr) {
   sprintf(ppr->Mfile,__CLASSDIR__);
   strcat(ppr->Mfile,"/resonance_DM_input/logMlist.txt");
 
-  sprintf(ppr->afile,__CLASSDIR__);
-  strcat(ppr->afile,"/resonance_DM_input/logagrid.txt");
+  sprintf(ppr->efile,__CLASSDIR__);
+  strcat(ppr->efile,"/resonance_DM_input/logelist.txt");
+
+
 
   FILE * AFILE = fopen(ppr->Afile,"r");
-  FILE * aFILE = fopen(ppr->afile,"r");
+
   FILE * MFILE = fopen(ppr->Mfile,"r");
 
-  printf("interpolating in a\n");
+  FILE * eFILE = fopen(ppr->efile,"r");
+
+  //printf("interpolating in a\n");
 
   double logM = log10(M);
   double logA = log10(A);
+  double loge = log10(e);
 
-  char str[60];
+  char str[80];
+
 
   int i;
+  int nlow;
+  char cnlow[10];
+  char cnhigh[10];
 
   double number;
 
+  double low_e_a;
+  double high_e_a;
+  double final_a;
+
   double Ms[50];
   double As[100];
-  double as[5000];
+  double es[100];
+  double alows[5000];
+  double ahighs[5000];
 
-  printf("reading files\n");
 
   for (i = 0; i < 100; i++) {
-    printf("step1\n");
-    printf("path = %s\n", ppr->Afile);
-    if( fgets (str, 60, AFILE)!=NULL ) {
-      printf("step2\n");
+    if( fgets (str, 80, AFILE)!=NULL ) {
         number = atof(str);
-        printf("step3\n");
         As[i] = number;
-        printf("step4\n");
      }
   }
-  printf("closing\n");
    fclose(AFILE);
-   printf("closed\n");
 
    for (i = 0; i < 50; i++) {
-     if( fgets (str, 60, MFILE)!=NULL ) {
+     if( fgets (str, 80, MFILE)!=NULL ) {
         number = atof(str);
         Ms[i] = atof(str);
       }
@@ -4543,44 +4550,138 @@ double input_interp_a_bidm(double M, double A, struct precision * ppr) {
 
     fclose(MFILE);
 
+  for (i = 0; i < 100; i++) {
+    if( fgets (str, 80, MFILE)!=NULL ) {
+        number = atof(str);
+        es[i] = atof(str);
+      }
+  }
+
+     fclose(eFILE);
+
+  nlow=search(100, es, loge);
+  sprintf(cnlow,"/%i",nlow);
+  sprintf(cnhigh,"/%i",nlow+1);
+
+
+  sprintf(ppr->alowfile,__CLASSDIR__);
+  strcat(ppr->alowfile,cnlow); // Add search
+  strcat(ppr->alowfile,"/resonance_DM_input/logagrid.txt");
+
+  FILE * alowFILE = fopen(ppr->alowfile,"r");
+
     for (size_t i = 0; i < 5000; i++) {
-      if( fgets (str, 60, aFILE)!=NULL ) {
+      if( fgets (str, 80, alowFILE)!=NULL ) {
           number = atof(str);
-          as[i] = number;
+          alows[i] = number;
        }
     }
 
-     fclose(aFILE);
+     fclose(alowFILE);
 
-     printf("defining interpolator\n");
+     //printf("defining interpolator\n");
 
 
 
-     gsl_interp2d * interper = gsl_interp2d_alloc(gsl_interp2d_bicubic, 50, 100);
+     gsl_interp2d * interper_low = gsl_interp2d_alloc(gsl_interp2d_bilinear, 50, 100);
 
-     gsl_interp2d_init(interper, Ms, As, as, 50, 100);
+     gsl_interp2d_init(interper_low, Ms, As, alows, 50, 100);
 
-     gsl_interp_accel * accM = gsl_interp_accel_alloc();
-     gsl_interp_accel * accA = gsl_interp_accel_alloc();
+     gsl_interp_accel * accM_low = gsl_interp_accel_alloc();
+     gsl_interp_accel * accA_low = gsl_interp_accel_alloc();
 
-     printf("interpolating\n");
+     //printf("interpolating\n");
 
      if (logM < Ms[49] && logM > Ms[0] && logA < As[99] && logA > As[0]) {
-       number = gsl_interp2d_eval(interper, Ms, As, as, logM, logA, accM, accA);
+       low_e_a = gsl_interp2d_eval(interper_low, Ms, As, alows, logM, logA, accM_low, accA_low);
      } else {
       fprintf(stdout, "Warning: Extrapolating a_bidm\n");
-       number = gsl_interp2d_eval_extrap(interper, Ms, As, as, logM, logA, accM, accA);
+       low_e_a = gsl_interp2d_eval_extrap(interper_low, Ms, As, alows, logM, logA, accM_low, accA_low);
      }
 
-     printf("freeing\n");
+     gsl_interp2d_free(interper_low);
+     gsl_interp_accel_free(accM_low);
+     gsl_interp_accel_free(accA_low);
+
+     // a high begins here
+
+     sprintf(ppr->ahighfile,__CLASSDIR__);
+     strcat(ppr->ahighfile,cnhigh); // Add search
+     strcat(ppr->ahighfile,"/resonance_DM_input/logagrid.txt");
+
+     FILE * ahighFILE = fopen(ppr->ahighfile,"r");
+
+     for (size_t i = 0; i < 5000; i++) {
+       if( fgets (str, 80, ahighFILE)!=NULL ) {
+           number = atof(str);
+           ahighs[i] = number;
+        }
+     }
+
+      fclose(ahighFILE);
+
+      gsl_interp2d * interper_high = gsl_interp2d_alloc(gsl_interp2d_bilinear, 50, 100);
+
+      gsl_interp2d_init(interper_high, Ms, As, alows, 50, 100);
+
+      gsl_interp_accel * accM_high = gsl_interp_accel_alloc();
+      gsl_interp_accel * accA_high = gsl_interp_accel_alloc();
+
+      //printf("interpolating\n");
+
+      if (logM < Ms[49] && logM > Ms[0] && logA < As[99] && logA > As[0]) {
+        high_e_a = gsl_interp2d_eval(interper_high, Ms, As, alows, logM, logA, accM_high, accA_high);
+      } else {
+       fprintf(stdout, "Warning: Extrapolating a_bidm\n");
+        high_e_a = gsl_interp2d_eval_extrap(interper_high, Ms, As, alows, logM, logA, accM_high, accA_high);
+      }
 
 
 
-     gsl_interp2d_free(interper);
-     gsl_interp_accel_free(accM);
-     gsl_interp_accel_free(accA);
+     gsl_interp2d_free(interper_high);
+     gsl_interp_accel_free(accM_high);
+     gsl_interp_accel_free(accA_high);
 
-     printf("a = %f\n", pow(10,number));
+     double delta_loge = loge - es[nlow];
+     double slope_loga = (high_e_a - low_e_a)/(es[nlow+1] - es[nlow]);
 
-  return pow(10,number);
+     final_a = low_e_a + slope_loga*delta_loge;
+
+     //printf("a = %f\n", pow(10,number));
+
+  return pow(10,final_a);
+}
+
+
+int search(int n, double * x, double z){
+  //fprintf(stderr, "running search\n");
+  int L = 0;
+  int R = n-1;
+  if (L>R) {
+    printf("List must have length greater than 0, provided length is n=%i\n",n);
+    return 1e10;
+  }
+  int iter=0;
+  //fprintf(stderr, "doing search loop\n");
+  do {
+
+
+    int m = (L+R)/2;
+    if (x[m] <= z && x[m+1] > z) {
+    //  fprintf(stderr, "found m=%i\n",m);
+      return m;
+    } else if (x[m] < z) {
+      L = m+1;
+    } else if (x[m] > z) {
+      R = m-1;
+    }
+
+
+    iter++;
+    if (iter>n) {
+      printf("search failed\n");
+      return 1e10;
+      break;
+    }
+  } while(1);
 }
