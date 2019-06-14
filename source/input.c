@@ -786,7 +786,7 @@ int input_read_parameters(
              errmsg,
              "In input file, you have f_idm_dr!=0. but a_dark=0."); */
 
-  printf("bidm read\n");
+  //printf("bidm read\n");
 
   //this is the standard CDM case
   if (flag3 == _FALSE_){
@@ -4551,7 +4551,7 @@ double input_interp_a_bidm(double M, double A, double e, struct precision * ppr)
     fclose(MFILE);
 
   for (i = 0; i < 100; i++) {
-    if( fgets (str, 80, MFILE)!=NULL ) {
+    if( fgets (str, 80, eFILE)!=NULL ) {
         number = atof(str);
         es[i] = atof(str);
       }
@@ -4565,10 +4565,12 @@ double input_interp_a_bidm(double M, double A, double e, struct precision * ppr)
 
 
   sprintf(ppr->alowfile,__CLASSDIR__);
+  strcat(ppr->alowfile,"/resonance_DM_input/");
   strcat(ppr->alowfile,cnlow); // Add search
-  strcat(ppr->alowfile,"/resonance_DM_input/logagrid.txt");
+  strcat(ppr->alowfile,"/logagrid.txt");
 
   FILE * alowFILE = fopen(ppr->alowfile,"r");
+//  printf("alow=%s\n",ppr->alowfile);
 
     for (size_t i = 0; i < 5000; i++) {
       if( fgets (str, 80, alowFILE)!=NULL ) {
@@ -4576,7 +4578,7 @@ double input_interp_a_bidm(double M, double A, double e, struct precision * ppr)
           alows[i] = number;
        }
     }
-
+//  printf("alow looked at\n");
      fclose(alowFILE);
 
      //printf("defining interpolator\n");
@@ -4606,10 +4608,12 @@ double input_interp_a_bidm(double M, double A, double e, struct precision * ppr)
      // a high begins here
 
      sprintf(ppr->ahighfile,__CLASSDIR__);
-     strcat(ppr->ahighfile,cnhigh); // Add search
-     strcat(ppr->ahighfile,"/resonance_DM_input/logagrid.txt");
+     strcat(ppr->alowfile,"/resonance_DM_input/");
+     strcat(ppr->alowfile,cnhigh); // Add search
+     strcat(ppr->alowfile,"/logagrid.txt");
 
      FILE * ahighFILE = fopen(ppr->ahighfile,"r");
+    // printf("ahigh opened\n");
 
      for (size_t i = 0; i < 5000; i++) {
        if( fgets (str, 80, ahighFILE)!=NULL ) {
@@ -4679,7 +4683,7 @@ int search(int n, double * x, double z){
 
     iter++;
     if (iter>n) {
-      printf("search failed\n");
+      printf("search failed, looking for %f\n",z);
       return 1e10;
       break;
     }
