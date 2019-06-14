@@ -1,0 +1,9 @@
+
+nprocs=2
+
+
+for ((rank = 0; rank < nprocs; rank += 1)); do
+    echo $nprocs $rank
+    python resonance_grid.py $nprocs $rank >/dev/null &
+done
+

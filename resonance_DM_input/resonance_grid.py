@@ -1,35 +1,41 @@
 import numpy as np
 import scipy
+import os, sys
 from classy import Class
 from scipy.interpolate import interp1d
 
+nprocs = int(sys.argv[1])
+rank = int(sys.argv[2])
+N_e = 100
+
 Avals = np.logspace(-12,-5,100)
 Mvals = np.logspace(1,4,50)
-evals = np.logspace(-11,-6,100)
+evals = np.logspace(-11,-6,N_e)
 
 logAfile= open("logAlist.txt","w+")
 for iA in range(0,Avals.size):
     Aval = np.log10(Avals[iA])
-    logAfile.write(f'{Aval}\n')
+    logAfile.write(str(Aval)+'\n') #f'{Aval}\n')
 logAfile.close()
 
 logMfile= open("logMlist.txt","w+")
 for iM in range(0,Mvals.size):
     Mval = np.log10(Mvals[iM])
-    logMfile.write(f'{Mval}\n')
+    logMfile.write(str(Mval)+'\n')
 logMfile.close()
 
 logefile= open("logelist.txt","w+")
 for ie in range(0,evals.size):
     eval = np.log10(evals[ie])
-    logefile.write(f'{eval}\n')
+    logefile.write(str(eval)+'\n')
 logefile.close()
 
 
 Ndone = 0
-Ntodo = Avals.size*Mvals.size*evals.size
+Ntodo = Avals.size*Mvals.size*evals.size/nprocs
 
-for i in range(0,evals.size):
+#for i in range(0,evals.size):
+for i in range(rank*N_e//nprocs, (rank + 1)*N_e//nprocs):
     epsilon = evals[i]
     models = set()
     moddata = {}
@@ -65,7 +71,7 @@ for i in range(0,evals.size):
             moddata[model].update({'Teq':Teq,'aeq':aeq,'zeq':zeq})
             cosmo.struct_cleanup()
             Ndone+=1
-            print(Ndone/Ntodo)
+            print(rank, Ndone/float(Ntodo))
 
     AA, MM = np.meshgrid(Avals,Mvals)
     aa = np.zeros(AA.shape)
@@ -82,9 +88,10 @@ for i in range(0,evals.size):
         for iM in range(0,Mvals.size):
             aVals[iA*Mvals.size+iM]=aa[iM,iA]
 
-
+    if not os.path.exists(str(i)):
+        os.makedirs(str(i))
     logafile= open(str(i)+"/logagrid.txt","w+")
     for ia in range(0,aVals.size):
         aval = np.log10(aVals[ia])
-        logafile.write(f'{aval}\n')
+        logafile.write(str(aval)+'\n')
     logafile.close()
